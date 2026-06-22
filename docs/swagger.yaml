@@ -1,0 +1,1299 @@
+openapi: 3.0.3
+info:
+    title: UnaHur Anti-Social Net API
+    description: |
+        API REST del backend para la red social **UnaHur Anti-Social Net**.
+        Permite gestionar usuarios, publicaciones, comentarios, etiquetas, imágenes asociadas a posts
+        y relaciones de seguimiento entre usuarios (followers).
+
+        **Variables de entorno relevantes**
+
+        | Variable | Descripción |
+        | --- | --- |
+        | PORT | Puerto del servidor (por defecto 3001) |
+        | MESES | Antigüedad máxima en meses para comentarios en publicaciones (por defecto 6) |
+        | CACHE_POSTS_ENABLED | Caché en memoria para GET de posts (por defecto true) |
+        | CACHE_POSTS_TTL_SECONDS | TTL del caché en segundos (por defecto 60) |
+        | DB_DIALECT | sqlite, mysql, mariadb o postgres |
+        | ENABLE_SWAGGER | Habilita Swagger UI en producción (por defecto false) |
+    version: 1.0.0
+    contact:
+        name: Anti-Social Team
+
+servers:
+    - url: http://localhost:3001
+      description: Servidor local (puerto configurable vía variable de entorno PORT)
+
+tags:
+    - name: Users
+      description: Gestión de usuarios registrados
+    - name: Posts
+      description: Publicaciones y sus relaciones
+    - name: Post Images
+      description: Imágenes asociadas a publicaciones
+    - name: Comments
+      description: Comentarios sobre publicaciones
+    - name: Tags
+      description: Etiquetas de publicaciones
+    - name: Followers
+      description: Relaciones de seguimiento entre usuarios
+
+paths:
+    /users:
+        get:
+            tags: [Users]
+            summary: Listar todos los usuarios
+            operationId: getAllUsers
+            parameters:
+                - $ref: "#/components/parameters/ViewerIdQuery"
+            responses:
+                "200":
+                    description: |
+                        Lista de usuarios. Perfiles privados devuelven solo `id`, `nickname` e `isProfilePublic`
+                        salvo que `viewer_id` sea el propio usuario o un seguidor.
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    oneOf:
+                                        - $ref: "#/components/schemas/User"
+                                        - $ref: "#/components/schemas/UserLimited"
+        post:
+            tags: [Users]
+            summary: Crear un usuario
+            operationId: createUser
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/UserCreate"
+            responses:
+                "201":
+                    description: Usuario creado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/User"
+                "400":
+                    $ref: "#/components/responses/ValidationError"
+                "409":
+                    $ref: "#/components/responses/ConflictError"
+
+    /users/{id}:
+        parameters:
+            - $ref: "#/components/parameters/IdParam"
+        get:
+            tags: [Users]
+            summary: Obtener un usuario por ID
+            operationId: getUserById
+            parameters:
+                - $ref: "#/components/parameters/ViewerIdQuery"
+            responses:
+                "200":
+                    description: Usuario encontrado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/User"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "403":
+                    $ref: "#/components/responses/Forbidden"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        put:
+            tags: [Users]
+            summary: Actualizar un usuario
+            operationId: updateUser
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/UserUpdate"
+            responses:
+                "200":
+                    description: Usuario actualizado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/User"
+                "400":
+                    $ref: "#/components/responses/ValidationError"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+                "409":
+                    $ref: "#/components/responses/ConflictError"
+        delete:
+            tags: [Users]
+            summary: Eliminar un usuario
+            operationId: deleteUser
+            responses:
+                "200":
+                    description: Usuario eliminado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/MessageResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /users/{id}/profile-picture:
+        parameters:
+            - $ref: "#/components/parameters/IdParam"
+        put:
+            tags: [Users]
+            summary: Subir o actualizar la foto de perfil
+            operationId: uploadUserProfilePicture
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            required: [image]
+                            properties:
+                                image:
+                                    type: string
+                                    format: binary
+                                    description: Archivo de imagen (JPEG, PNG o WebP, máx. 5 MB)
+            responses:
+                "200":
+                    description: Foto de perfil actualizada
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/User"
+                "400":
+                    $ref: "#/components/responses/ValidationError"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        delete:
+            tags: [Users]
+            summary: Eliminar la foto de perfil
+            operationId: deleteUserProfilePicture
+            responses:
+                "200":
+                    description: Foto de perfil eliminada
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/MessageResponse"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /users/{id}/followers:
+        parameters:
+            - $ref: "#/components/parameters/IdParam"
+        get:
+            tags: [Followers]
+            summary: Listar seguidores de un usuario
+            description: Usuarios que siguen al usuario indicado por `id`.
+            operationId: getUserFollowers
+            parameters:
+                - $ref: "#/components/parameters/ViewerIdQuery"
+            responses:
+                "200":
+                    description: Lista de seguidores
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/UserSummary"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "403":
+                    $ref: "#/components/responses/Forbidden"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /users/{id}/following:
+        parameters:
+            - $ref: "#/components/parameters/IdParam"
+        get:
+            tags: [Followers]
+            summary: Listar usuarios seguidos
+            description: Usuarios que el usuario `id` está siguiendo.
+            operationId: getUserFollowing
+            parameters:
+                - $ref: "#/components/parameters/ViewerIdQuery"
+            responses:
+                "200":
+                    description: Lista de usuarios seguidos
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/UserSummary"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "403":
+                    $ref: "#/components/responses/Forbidden"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /users/{id}/follow:
+        parameters:
+            - $ref: "#/components/parameters/IdParam"
+        post:
+            tags: [Followers]
+            summary: Seguir a un usuario
+            description: |
+                El usuario `follower_id` comienza a seguir al usuario `id`.
+                No se permite seguirse a uno mismo.
+            operationId: followUser
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/FollowRequest"
+            responses:
+                "201":
+                    description: Seguimiento creado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FollowActionResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+                "409":
+                    $ref: "#/components/responses/ConflictError"
+
+    /users/{id}/follow/{follower_id}:
+        parameters:
+            - $ref: "#/components/parameters/IdParam"
+            - name: follower_id
+              in: path
+              required: true
+              schema:
+                  type: integer
+              description: ID del usuario que deja de seguir
+        delete:
+            tags: [Followers]
+            summary: Dejar de seguir a un usuario
+            operationId: unfollowUser
+            responses:
+                "200":
+                    description: Seguimiento eliminado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/FollowActionResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /posts:
+        get:
+            tags: [Posts]
+            summary: Listar publicaciones
+            description: |
+                Respuesta cacheada en memoria (TTL configurable). Se invalida al crear, editar o borrar posts o comentarios.
+            operationId: getAllPosts
+            parameters:
+                - name: user_id
+                  in: query
+                  description: Filtrar publicaciones por ID de usuario
+                  required: false
+                  schema:
+                      type: integer
+                      minimum: 1
+                - $ref: "#/components/parameters/ViewerIdQuery"
+            responses:
+                "200":
+                    description: |
+                        Lista de publicaciones con usuario, imágenes, tags y comentarios visibles.
+                        Los comentarios con antigüedad mayor o igual a `MESES` no se incluyen (filtro por `monthsOld`).
+                        Incluye posteos de usuarios con perfil público o privado. Si se filtra por `user_id`,
+                        un perfil privado solo es accesible para el propio usuario o sus seguidores (`viewer_id`).
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/PostDetail"
+                "400":
+                    $ref: "#/components/responses/ValidationError"
+                "403":
+                    $ref: "#/components/responses/Forbidden"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        post:
+            tags: [Posts]
+            summary: Crear una publicación
+            operationId: createPost
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/PostCreate"
+            responses:
+                "201":
+                    description: Publicación creada
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostDetail"
+                "400":
+                    $ref: "#/components/responses/ValidationError"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /posts/{id}:
+        parameters:
+            - $ref: "#/components/parameters/IdParam"
+        get:
+            tags: [Posts]
+            summary: Obtener una publicación por ID
+            description: |
+                Devuelve la publicación con sus relaciones. Los comentarios más antiguos
+                que X meses (configurable con la variable de entorno MESES) no se incluyen.
+            operationId: getPostById
+            responses:
+                "200":
+                    description: Publicación encontrada
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostDetail"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        patch:
+            tags: [Posts]
+            summary: Actualizar una publicación
+            description: |
+                Permite actualizar la descripción y/o reemplazar por completo la lista de etiquetas (`tags`).
+                Si se envía `tags`, las etiquetas anteriores del post se sustituyen por las nuevas.
+            operationId: updatePost
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/PostUpdate"
+            responses:
+                "200":
+                    description: Publicación actualizada
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostDetail"
+                "400":
+                    $ref: "#/components/responses/ValidationError"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        delete:
+            tags: [Posts]
+            summary: Eliminar una publicación
+            operationId: deletePost
+            responses:
+                "200":
+                    description: Publicación eliminada
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/MessageResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /posts/{id}/images:
+        parameters:
+            - $ref: "#/components/parameters/IdParam"
+        get:
+            tags: [Post Images]
+            summary: Listar imágenes de una publicación
+            operationId: getPostImagesByPost
+            responses:
+                "200":
+                    description: Imágenes de la publicación
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/PostImage"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        post:
+            tags: [Post Images]
+            summary: Subir una imagen a una publicación
+            operationId: createPostImageOnPost
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            required: [image]
+                            properties:
+                                image:
+                                    type: string
+                                    format: binary
+                                    description: Archivo de imagen (JPEG, PNG o WebP, máx. 5 MB)
+            responses:
+                "201":
+                    description: Imagen asociada al post
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostImage"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /posts/{id}/images/{image_id}:
+        parameters:
+            - $ref: "#/components/parameters/IdParam"
+            - $ref: "#/components/parameters/ImageIdParam"
+        patch:
+            tags: [Post Images]
+            summary: Actualizar una imagen de una publicación
+            operationId: updatePostImageOnPost
+            requestBody:
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            properties:
+                                image:
+                                    type: string
+                                    format: binary
+                                    description: Nueva imagen (opcional)
+            responses:
+                "200":
+                    description: Imagen actualizada
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostImage"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        delete:
+            tags: [Post Images]
+            summary: Eliminar una imagen de una publicación
+            operationId: deletePostImageFromPost
+            responses:
+                "200":
+                    description: Imagen eliminada del post
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/MessageResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /post-images:
+        get:
+            tags: [Post Images]
+            summary: Listar todas las imágenes de posts
+            operationId: getAllPostImages
+            responses:
+                "200":
+                    description: Lista de imágenes
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/PostImage"
+        post:
+            tags: [Post Images]
+            summary: Crear una imagen asociada a un post
+            operationId: createPostImage
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            required: [image, postId]
+                            properties:
+                                postId:
+                                    type: integer
+                                    minimum: 1
+                                    description: ID de la publicación
+                                image:
+                                    type: string
+                                    format: binary
+                                    description: Archivo de imagen (JPEG, PNG o WebP, máx. 5 MB)
+            responses:
+                "201":
+                    description: Imagen creada
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostImage"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /post-images/{id}:
+        parameters:
+            - $ref: "#/components/parameters/IdParam"
+        get:
+            tags: [Post Images]
+            summary: Obtener una imagen por ID
+            operationId: getPostImageById
+            responses:
+                "200":
+                    description: Imagen encontrada
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostImage"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        patch:
+            tags: [Post Images]
+            summary: Actualizar una imagen
+            operationId: updatePostImage
+            requestBody:
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            properties:
+                                postId:
+                                    type: integer
+                                    minimum: 1
+                                    description: Reasignar imagen a otro post (opcional)
+                                image:
+                                    type: string
+                                    format: binary
+                                    description: Nueva imagen (opcional)
+            responses:
+                "200":
+                    description: Imagen actualizada
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostImage"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        delete:
+            tags: [Post Images]
+            summary: Eliminar una imagen
+            operationId: deletePostImage
+            responses:
+                "200":
+                    description: Imagen eliminada
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/MessageResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /comments:
+        get:
+            tags: [Comments]
+            summary: Listar todos los comentarios
+            description: |
+                Devuelve comentarios con usuario y publicación asociados (sin filtro por antigüedad).
+                Opcionalmente filtra por `post_id`.
+            operationId: getAllComments
+            parameters:
+                - name: post_id
+                  in: query
+                  description: Filtrar comentarios por ID de publicación
+                  required: false
+                  schema:
+                      type: integer
+                      minimum: 1
+            responses:
+                "200":
+                    description: Lista de comentarios con usuario y post
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/CommentDetail"
+                "400":
+                    $ref: "#/components/responses/ValidationError"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        post:
+            tags: [Comments]
+            summary: Crear un comentario
+            operationId: createComment
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/CommentCreate"
+            responses:
+                "201":
+                    description: Comentario creado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/CommentDetail"
+                "400":
+                    $ref: "#/components/responses/ValidationError"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /comments/{id}:
+        parameters:
+            - $ref: "#/components/parameters/IdParam"
+        get:
+            tags: [Comments]
+            summary: Obtener un comentario por ID
+            operationId: getCommentById
+            responses:
+                "200":
+                    description: Comentario encontrado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/CommentDetail"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        patch:
+            tags: [Comments]
+            summary: Actualizar un comentario
+            operationId: updateComment
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/CommentUpdate"
+            responses:
+                "200":
+                    description: Comentario actualizado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/CommentDetail"
+                "400":
+                    $ref: "#/components/responses/ValidationError"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        delete:
+            tags: [Comments]
+            summary: Eliminar un comentario
+            operationId: deleteComment
+            responses:
+                "200":
+                    description: Comentario eliminado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/MessageResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /tags:
+        get:
+            tags: [Tags]
+            summary: Listar todas las etiquetas
+            description: |
+                Devuelve etiquetas con las publicaciones asociadas.
+                Opcionalmente filtra por `post_id` (solo tags vinculados a esa publicación).
+            operationId: getAllTags
+            parameters:
+                - name: post_id
+                  in: query
+                  description: Filtrar etiquetas asociadas a una publicación
+                  required: false
+                  schema:
+                      type: integer
+                      minimum: 1
+            responses:
+                "200":
+                    description: Lista de tags
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Tag"
+                "400":
+                    $ref: "#/components/responses/ValidationError"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        post:
+            tags: [Tags]
+            summary: Crear una etiqueta
+            description: |
+                Crea una etiqueta por name o reutiliza la existente (mismo nombre, sin distinguir mayúsculas).
+                Si se envía post_id, la vincula a esa publicación.
+                Responde 201 si el tag es nuevo; 200 si ya existía (en ambos casos devuelve el tag con sus posts).
+            operationId: createTag
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/TagCreate"
+            responses:
+                "200":
+                    description: Tag ya existía; se devuelve el existente (y se vincula al post si se envió post_id)
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Tag"
+                "201":
+                    description: Tag creado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Tag"
+                "400":
+                    $ref: "#/components/responses/ValidationError"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+    /tags/{id}:
+        parameters:
+            - $ref: "#/components/parameters/IdParam"
+        get:
+            tags: [Tags]
+            summary: Obtener una etiqueta por ID
+            operationId: getTagById
+            responses:
+                "200":
+                    description: Tag encontrado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Tag"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        patch:
+            tags: [Tags]
+            summary: Actualizar una etiqueta
+            operationId: updateTag
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/TagUpdate"
+            responses:
+                "200":
+                    description: Tag actualizado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Tag"
+                "400":
+                    $ref: "#/components/responses/ValidationError"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+        delete:
+            tags: [Tags]
+            summary: Eliminar una etiqueta
+            operationId: deleteTag
+            responses:
+                "200":
+                    description: Tag eliminado
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/MessageResponse"
+                "400":
+                    $ref: "#/components/responses/BadRequest"
+                "404":
+                    $ref: "#/components/responses/NotFound"
+
+components:
+    parameters:
+        IdParam:
+            name: id
+            in: path
+            required: true
+            description: Identificador numérico del recurso
+            schema:
+                type: integer
+                minimum: 1
+        ImageIdParam:
+            name: image_id
+            in: path
+            required: true
+            description: Identificador numérico de la imagen
+            schema:
+                type: integer
+                minimum: 1
+        ViewerIdQuery:
+            name: viewer_id
+            in: query
+            required: false
+            description: ID del usuario que consulta el perfil (para validar perfiles privados)
+            schema:
+                type: integer
+                minimum: 1
+
+    responses:
+        BadRequest:
+            description: Solicitud inválida
+            content:
+                application/json:
+                    schema:
+                        oneOf:
+                            - $ref: "#/components/schemas/MessageResponse"
+                            - $ref: "#/components/schemas/ValidationErrorResponse"
+        ValidationError:
+            description: Error de validación de datos
+            content:
+                application/json:
+                    schema:
+                        $ref: "#/components/schemas/ValidationErrorResponse"
+        NotFound:
+            description: Recurso no encontrado
+            content:
+                application/json:
+                    schema:
+                        $ref: "#/components/schemas/MessageResponse"
+        Forbidden:
+            description: Acceso denegado al perfil privado
+            content:
+                application/json:
+                    schema:
+                        $ref: "#/components/schemas/MessageResponse"
+        ConflictError:
+            description: Conflicto por restricción de unicidad
+            content:
+                application/json:
+                    schema:
+                        $ref: "#/components/schemas/ErrorResponse"
+
+    schemas:
+        MessageResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: Operación realizada correctamente
+
+        ErrorResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                error:
+                    type: string
+
+        ValidationErrorResponse:
+            type: object
+            properties:
+                errores:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            atributo:
+                                type: string
+                            error:
+                                type: string
+
+        User:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 1
+                nickname:
+                    type: string
+                    example: juan_perez
+                name:
+                    type: string
+                    example: Juan
+                lastName:
+                    type: string
+                    example: Perez
+                email:
+                    type: string
+                    format: email
+                    example: juan@example.com
+                password:
+                    type: string
+                    writeOnly: true
+                birthDate:
+                    type: string
+                    format: date-time
+                gender:
+                    type: string
+                    enum: [femenino, Femenino, masculino, Masculino, otro, Otro]
+                profilePicture:
+                    type: string
+                    format: uri
+                    nullable: true
+                    example: http://localhost:3001/uploads/profiles/foto.jpg
+                isProfilePublic:
+                    type: boolean
+                    description: true = perfil público; false = solo visible para seguidores
+                    example: true
+                createdAt:
+                    type: string
+                    format: date-time
+                updatedAt:
+                    type: string
+                    format: date-time
+
+        UserCreate:
+            type: object
+            required: [nickname, name, lastName, email, password, birthDate, gender]
+            properties:
+                nickname:
+                    type: string
+                    minLength: 3
+                    maxLength: 30
+                    pattern: "^[a-zA-Z0-9_.-]+$"
+                name:
+                    type: string
+                    minLength: 2
+                    maxLength: 100
+                lastName:
+                    type: string
+                    minLength: 2
+                    maxLength: 100
+                email:
+                    type: string
+                    format: email
+                password:
+                    type: string
+                    minLength: 6
+                    pattern: "^[a-zA-Z0-9_.-]+$"
+                birthDate:
+                    type: string
+                    format: date
+                gender:
+                    type: string
+                    enum: [femenino, Femenino, masculino, Masculino, otro, Otro]
+                isProfilePublic:
+                    type: boolean
+                    default: true
+                    description: true = perfil público; false = solo visible para seguidores
+
+        UserUpdate:
+            type: object
+            minProperties: 1
+            properties:
+                nickname:
+                    type: string
+                    minLength: 3
+                    maxLength: 30
+                name:
+                    type: string
+                    minLength: 2
+                    maxLength: 100
+                lastName:
+                    type: string
+                    minLength: 2
+                    maxLength: 100
+                email:
+                    type: string
+                    format: email
+                password:
+                    type: string
+                    minLength: 6
+                birthDate:
+                    type: string
+                    format: date
+                gender:
+                    type: string
+                    enum: [femenino, Femenino, masculino, Masculino, otro, Otro]
+                isProfilePublic:
+                    type: boolean
+                    description: true = perfil público; false = solo visible para seguidores
+
+        UserLimited:
+            type: object
+            description: Vista reducida de un perfil privado
+            properties:
+                id:
+                    type: integer
+                nickname:
+                    type: string
+                isProfilePublic:
+                    type: boolean
+                    example: false
+
+        PostCreate:
+            type: object
+            required: [titulo, description, user_id]
+            properties:
+                titulo:
+                    type: string
+                    minLength: 1
+                    maxLength: 200
+                description:
+                    type: string
+                    minLength: 1
+                    maxLength: 5000
+                user_id:
+                    type: integer
+                    minimum: 1
+                tags:
+                    type: array
+                    minItems: 1
+                    items:
+                        type: string
+                        minLength: 1
+                        maxLength: 50
+
+        PostUpdate:
+            type: object
+            minProperties: 1
+            description: Al menos uno de `titulo`, `description` o `tags` es requerido.
+            properties:
+                titulo:
+                    type: string
+                    minLength: 1
+                    maxLength: 200
+                description:
+                    type: string
+                    minLength: 1
+                    maxLength: 5000
+                tags:
+                    type: array
+                    minItems: 1
+                    description: Reemplaza todas las etiquetas actuales del post.
+                    items:
+                        type: string
+                        minLength: 1
+                        maxLength: 50
+
+        PostDetail:
+            type: object
+            properties:
+                id:
+                    type: integer
+                titulo:
+                    type: string
+                description:
+                    type: string
+                user_id:
+                    type: integer
+                createdAt:
+                    type: string
+                    format: date-time
+                updatedAt:
+                    type: string
+                    format: date-time
+                user:
+                    $ref: "#/components/schemas/UserSummary"
+                postImages:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/PostImage"
+                tags:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/TagSummary"
+                comments:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/CommentSummary"
+
+        UserSummary:
+            type: object
+            properties:
+                id:
+                    type: integer
+                nickname:
+                    type: string
+                name:
+                    type: string
+                lastName:
+                    type: string
+                profilePicture:
+                    type: string
+                    format: uri
+                    nullable: true
+
+        PostImage:
+            type: object
+            properties:
+                id:
+                    type: integer
+                url:
+                    type: string
+                    format: uri
+                    example: http://localhost:3001/uploads/posts/imagen.jpg
+                post_id:
+                    type: integer
+                createdAt:
+                    type: string
+                    format: date-time
+                updatedAt:
+                    type: string
+                    format: date-time
+
+        CommentCreate:
+            type: object
+            required: [content, post_id, user_id]
+            properties:
+                content:
+                    type: string
+                    minLength: 1
+                    maxLength: 150
+                post_id:
+                    type: integer
+                    minimum: 1
+                user_id:
+                    type: integer
+                    minimum: 1
+
+        CommentUpdate:
+            type: object
+            minProperties: 1
+            properties:
+                content:
+                    type: string
+                    minLength: 1
+                    maxLength: 150
+
+        CommentSummary:
+            type: object
+            properties:
+                id:
+                    type: integer
+                content:
+                    type: string
+                monthsOld:
+                    type: integer
+                    description: Meses transcurridos desde la creación (campo virtual)
+
+        PostSummary:
+            type: object
+            properties:
+                id:
+                    type: integer
+                description:
+                    type: string
+
+        TagSummary:
+            type: object
+            properties:
+                id:
+                    type: integer
+                name:
+                    type: string
+
+        CommentDetail:
+            type: object
+            properties:
+                id:
+                    type: integer
+                content:
+                    type: string
+                user_id:
+                    type: integer
+                post_id:
+                    type: integer
+                createdAt:
+                    type: string
+                    format: date-time
+                updatedAt:
+                    type: string
+                    format: date-time
+                monthsOld:
+                    type: integer
+                    description: Meses transcurridos desde la creación (campo virtual). En GET de posts, si es >= MESES el comentario no se devuelve.
+                user:
+                    $ref: "#/components/schemas/UserSummary"
+                post:
+                    $ref: "#/components/schemas/PostSummary"
+
+        Tag:
+            type: object
+            properties:
+                id:
+                    type: integer
+                name:
+                    type: string
+                createdAt:
+                    type: string
+                    format: date-time
+                updatedAt:
+                    type: string
+                    format: date-time
+                posts:
+                    type: array
+                    description: Publicaciones asociadas a la etiqueta
+                    items:
+                        $ref: "#/components/schemas/PostSummary"
+
+        TagCreate:
+            type: object
+            required: [name]
+            properties:
+                name:
+                    type: string
+                    minLength: 1
+                    maxLength: 25
+                post_id:
+                    type: integer
+                    minimum: 1
+                    description: Publicación a la que asociar la etiqueta al crearla (opcional)
+
+        TagUpdate:
+            type: object
+            minProperties: 1
+            properties:
+                name:
+                    type: string
+                    minLength: 1
+                    maxLength: 25
+
+        FollowRequest:
+            type: object
+            required: [follower_id]
+            properties:
+                follower_id:
+                    type: integer
+                    minimum: 1
+                    description: ID del usuario que realiza o deja el seguimiento
+
+        FollowActionResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                    example: Seguimiento creado correctamente
+                following_id:
+                    type: integer
+                    description: ID del usuario seguido
+                follower_id:
+                    type: integer
+                    description: ID del usuario que sigue

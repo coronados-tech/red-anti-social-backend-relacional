@@ -1,0 +1,1264 @@
+{
+  "info": {
+    "_postman_id": "6b59ebea-e008-440f-a1f8-be900b5b8d63",
+    "name": "Api-Antisocial",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "55132673",
+    "_collection_link": "https://go.postman.co/collection/55132673-6b59ebea-e008-440f-a1f8-be900b5b8d63?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Followers y Following",
+          "item": [
+            {
+              "name": "List of followers",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{uri_user}}1/followers",
+                  "host": [
+                    "{{uri_user}}1"
+                  ],
+                  "path": [
+                    "followers"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List of following",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{uri_user}}1/following",
+                  "host": [
+                    "{{uri_user}}1"
+                  ],
+                  "path": [
+                    "following"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Follow",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"follower_id\": 2\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{uri_user}}1/follow",
+                  "host": [
+                    "{{uri_user}}1"
+                  ],
+                  "path": [
+                    "follow"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Following",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"follower_id\": 1\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{uri_user}}2/follow",
+                  "host": [
+                    "{{uri_user}}2"
+                  ],
+                  "path": [
+                    "follow"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Remove Follow",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{uri_user}}1/follow/2",
+                  "host": [
+                    "{{uri_user}}1"
+                  ],
+                  "path": [
+                    "follow",
+                    "2"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Profile picture",
+          "item": [
+            {
+              "name": "Upload profile picture",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{uri_user}}1/profile-picture",
+                  "host": [
+                    "{{uri_user}}1"
+                  ],
+                  "path": [
+                    "profile-picture"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete profile picture",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{uri_user}}1/profile-picture",
+                  "host": [
+                    "{{uri_user}}1"
+                  ],
+                  "path": [
+                    "profile-picture"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{uri_user}}",
+              "host": [
+                "{{uri_user}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "empty",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{uri_user}}",
+                  "host": [
+                    "{{uri_user}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "2"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"2-l9Fw4VUO7kr8CvBlt4zaMCqXZ0w\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 31 May 2026 23:28:51 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "[]"
+            },
+            {
+              "name": "list",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{uri_user}}",
+                  "host": [
+                    "{{uri_user}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "447"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"1bf-9QOPbBJSdehyOtz1/+mWN1I9Iuc\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 31 May 2026 23:35:51 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n    {\n        \"id\": 1,\n        \"nickname\": \"Loncha\",\n        \"name\": \"Carla Andrea\",\n        \"lastName\": \"Perez\",\n        \"email\": \"carlaprz@gmail.com\",\n        \"birthDate\": \"1988-11-06\",\n        \"gender\": \"Femenino\",\n        \"createdAt\": \"2026-05-31T23:32:38.874Z\",\n        \"updatedAt\": \"2026-05-31T23:32:38.878Z\"\n    },\n    {\n        \"id\": 2,\n        \"nickname\": \"Lonch4\",\n        \"name\": \"Carla Andrea\",\n        \"lastName\": \"Perez\",\n        \"email\": \"carlaprz+1@gmail.com\",\n        \"birthDate\": \"1998-01-09\",\n        \"gender\": \"Femenino\",\n        \"createdAt\": \"2026-05-31T23:35:05.175Z\",\n        \"updatedAt\": \"2026-05-31T23:35:05.175Z\"\n    }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{uri_user}}1",
+              "host": [
+                "{{uri_user}}1"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "get user",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{uri_user}}3",
+                  "host": [
+                    "{{uri_user}}3"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "223"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"df-ALIiRzuGaAQ0mQJxwns4M9y13nw\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 31 May 2026 23:47:23 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n    \"id\": 3,\n    \"nickname\": \"Loncha\",\n    \"name\": \"Carla Andrea\",\n    \"lastName\": \"Perez\",\n    \"email\": \"carlaprz+1@gmail.com\",\n    \"birthDate\": \"1998-01-09\",\n    \"gender\": \"Femenino\",\n    \"createdAt\": \"2026-05-31T23:46:44.693Z\",\n    \"updatedAt\": \"2026-05-31T23:46:44.693Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nickname\": \"Loncha\",\r\n    \"name\": \"Carla Andrea\",\r\n    \"lastName\": \"Perez\",\r\n    \"password\": \"12346789\",\r\n    \"email\": \"carlaprz@gmail.com\",\r\n    \"birthDate\": \"1998-01-10\",\r\n    \"gender\": \"Femenino\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri_user}}",
+              "host": [
+                "{{uri_user}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "user created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nickname\": \"Lonch4\",\r\n    \"name\": \"Carla Andrea\",\r\n    \"lastName\": \"Perez\",\r\n    \"password\": \"12346789\",\r\n    \"email\": \"carlaprz+1@gmail.com\",\r\n    \"birthDate\": \"1998-01-10\",\r\n    \"gender\": \"Femenino\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{uri_user}}",
+                  "host": [
+                    "{{uri_user}}"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "223"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"df-cIGTGphRT/Pq08LFYfzU6cFu7ks\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 31 May 2026 23:35:07 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 2,\n    \"nickname\": \"Lonch4\",\n    \"name\": \"Carla Andrea\",\n    \"lastName\": \"Perez\",\n    \"email\": \"carlaprz+1@gmail.com\",\n    \"birthDate\": \"1998-01-09\",\n    \"gender\": \"Femenino\",\n    \"createdAt\": \"2026-05-31T23:35:05.175Z\",\n    \"updatedAt\": \"2026-05-31T23:35:05.175Z\"\n}"
+            },
+            {
+              "name": "email duplicated",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nickname\": \"Loncha\",\r\n    \"name\": \"Carla Andrea\",\r\n    \"lastName\": \"Perez\",\r\n    \"password\": \"12346789\",\r\n    \"email\": \"carlaprz+1@gmail.com\",\r\n    \"birthDate\": \"1988-11-07\",\r\n    \"gender\": \"Femenino\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{uri_user}}",
+                  "host": [
+                    "{{uri_user}}"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "96"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"60-qrBKQcNxUAqPfjGHBH56stwIrP8\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 31 May 2026 23:32:49 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"El campo email ya se encuentra en uso por otro usuario.\",\n    \"error\": \"Validation error\"\n}"
+            },
+            {
+              "name": "nickname duplicated",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nickname\": \"Loncha\",\r\n    \"name\": \"Carla Andrea\",\r\n    \"lastName\": \"Perez\",\r\n    \"password\": \"12346789\",\r\n    \"email\": \"carlaprz+1@gmail.com\",\r\n    \"birthDate\": \"1988-11-07\",\r\n    \"gender\": \"Femenino\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{uri_user}}",
+                  "host": [
+                    "{{uri_user}}"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "99"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"63-TgDiB4qxkZ8Q8YUU+qGc88EFFWE\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 31 May 2026 23:33:49 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"El campo nickname ya se encuentra en uso por otro usuario.\",\n    \"error\": \"Validation error\"\n}"
+            },
+            {
+              "name": "birthdate invalid",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nickname\": \"Loncha\",\r\n    \"name\": \"Carla Andrea\",\r\n    \"lastName\": \"Perez\",\r\n    \"password\": \"12346789\",\r\n    \"email\": \"carlaprz+1@gmail.com\",\r\n    \"birthDate\": \"11-07-1988\",\r\n    \"gender\": \"Femenino\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{uri_user}}",
+                  "host": [
+                    "{{uri_user}}"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "118"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"76-Wz/GNvv9C+yXKJ7ubzp3aSgYO2E\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 31 May 2026 23:34:16 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"errores\": [\n        {\n            \"atributo\": \"birthDate\",\n            \"error\": \"La fecha de nacimiento debe tener formato YYYY-MM-DD (ej: 1988-11-07)\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Edit",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nickname\": \"Loncha\",\r\n    \"name\": \"Carla Andrea\",\r\n    \"lastName\": \"Perez\",\r\n    \"password\": \"12346789\",\r\n    \"email\": \"carlaprz+1@gmail.com\",\r\n    \"birthDate\": \"1998-01-10\",\r\n    \"gender\": \"Femenino\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri_user}}1",
+              "host": [
+                "{{uri_user}}1"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "user edited",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nickname\": \"Loncha\",\r\n    \"name\": \"Carla Andrea\",\r\n    \"lastName\": \"Perez\",\r\n    \"password\": \"12346789\",\r\n    \"email\": \"carlaprz+1@gmail.com\",\r\n    \"birthDate\": \"1998-01-10\",\r\n    \"gender\": \"Femenino\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{uri_user}}1",
+                  "host": [
+                    "{{uri_user}}1"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "223"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"df-fsVDmNPbakzjDxSzg9vET3Drzyo\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 31 May 2026 23:42:19 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n    \"id\": 1,\n    \"nickname\": \"Loncha\",\n    \"name\": \"Carla Andrea\",\n    \"lastName\": \"Perez\",\n    \"email\": \"carlaprz+1@gmail.com\",\n    \"birthDate\": \"1998-01-09\",\n    \"gender\": \"Femenino\",\n    \"createdAt\": \"2026-05-31T23:41:36.446Z\",\n    \"updatedAt\": \"2026-05-31T23:41:36.448Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Remove",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{uri_user}}2",
+              "host": [
+                "{{uri_user}}2"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "user deleted",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{uri_user}}2",
+                  "host": [
+                    "{{uri_user}}2"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "57"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"39-KWxX3SlcWQXP6nwXbd9SB58AH/M\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 31 May 2026 23:44:20 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n    \"message\": \"El Usuario con id 2 eliminado correctamente\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "item": [
+        {
+          "name": "Images",
+          "item": [
+            {
+              "name": "List",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": []
+                },
+                "url": {
+                  "raw": "{{uri_post}}2/images",
+                  "host": [
+                    "{{uri_post}}2"
+                  ],
+                  "path": [
+                    "images"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "uuid": "1485cf05-9bca-4e5b-9ea7-0432e421349c",
+                      "src": "/C:/Users/karly/OneDrive/Escritorio/logo.jpg"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{uri_post}}1/images",
+                  "host": [
+                    "{{uri_post}}1"
+                  ],
+                  "path": [
+                    "images"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Edit",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "uuid": "1485cf05-9bca-4e5b-9ea7-0432e421349c",
+                      "src": "/C:/Users/karly/Desktop/sobreruedas.png"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{uri_post}}2/images/1",
+                  "host": [
+                    "{{uri_post}}2"
+                  ],
+                  "path": [
+                    "images",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Remove",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "uuid": "1485cf05-9bca-4e5b-9ea7-0432e421349c",
+                      "src": "/C:/Users/karly/Desktop/sobreRuedas2.png"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{uri_post}}2/images/1",
+                  "host": [
+                    "{{uri_post}}2"
+                  ],
+                  "path": [
+                    "images",
+                    "1"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{uri_post}}",
+              "host": [
+                "{{uri_post}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get post",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{uri_post}}1",
+              "host": [
+                "{{uri_post}}1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter by user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{uri_post}}?user_id=1",
+              "host": [
+                "{{uri_post}}"
+              ],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n   \"titulo\": \"Mi publicación\",\r\n   \"description\": \"asdasd3\",\r\n   \"user_id\": 1,\r\n    \"tags\": [\"tag1\", \"tag2\" , \"tag3\"]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri_post}}",
+              "host": [
+                "{{uri_post}}"
+              ],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "description",
+                  "value": "asdasdasd",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"description\": \"edit \",\r\n    \"tags\": [\"hola\", \"chau\"]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri_post}}2",
+              "host": [
+                "{{uri_post}}2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{uri_post}}1",
+              "host": [
+                "{{uri_post}}1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{uri_comments}}",
+              "host": [
+                "{{uri_comments}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get comment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{uri_comments}}1",
+              "host": [
+                "{{uri_comments}}1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter by post",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{uri_comments}}?post_id=2",
+              "host": [
+                "{{uri_comments}}"
+              ],
+              "query": [
+                {
+                  "key": "post_id",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"content\": \"Este es mi comentario de prueba 2\",\r\n  \"user_id\": 2, \r\n  \"post_id\": 2\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri_comments}}",
+              "host": [
+                "{{uri_comments}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"content\": \"Este es mi comentario de prueba 2 edit\" \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri_comments}}2",
+              "host": [
+                "{{uri_comments}}2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{uri_comments}}1",
+              "host": [
+                "{{uri_comments}}1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tags",
+      "item": [
+        {
+          "name": "List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{uri_tags}}",
+              "host": [
+                "{{uri_tags}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get tag",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{uri_tags}}",
+              "host": [
+                "{{uri_tags}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter by post",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{uri_tags}}?post_id=1",
+              "host": [
+                "{{uri_tags}}"
+              ],
+              "query": [
+                {
+                  "key": "post_id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\" : \"Coronados\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri_tags}}",
+              "host": [
+                "{{uri_tags}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create and assing",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\" : \"CoronadosAreTheBest\",\r\n    \"post_id\":1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri_tags}}",
+              "host": [
+                "{{uri_tags}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"bla editado\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{uri_tags}}4",
+              "host": [
+                "{{uri_tags}}4"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{uri_tags}}2",
+              "host": [
+                "{{uri_tags}}2"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
