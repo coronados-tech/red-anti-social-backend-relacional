@@ -4,7 +4,7 @@ const { runMigrations } = require("./migrate");
 let dbReady = false;
 let dbInitPromise = null;
 
-const initDatabase = async () => {
+async function initDatabase() {
     if (dbReady) return;
 
     if (!dbInitPromise) {
@@ -26,6 +26,6 @@ const initDatabase = async () => {
     }
 
     await dbInitPromise;
-};
+}
 
-module.exports = { initDatabase };
+module.exports = initDatabase;

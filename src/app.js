@@ -5,7 +5,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const i18n = require("i18n");
-const { initDatabase } = require("./db/init");
+const initDatabase = require("./db/database");
 const errorMiddleware = require("./middlewares/error.middleware");
 const filterPostCommentsMiddleware = require("./middlewares/filterPostComments.middleware");
 
