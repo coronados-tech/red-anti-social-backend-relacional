@@ -1,9 +1,8 @@
 const app = require("./app");
-const initDatabase = require("./db/database");
 
 const PORT = process.env.PORT || 3001;
 
-initDatabase()
+app.ensureDatabase()
     .then(() => {
         app.listen(PORT, () => {
             console.log(`App iniciada en el puerto ${PORT}`);

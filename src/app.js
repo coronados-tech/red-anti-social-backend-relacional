@@ -5,11 +5,40 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const i18n = require("i18n");
-const initDatabase = require("./db/database");
 const errorMiddleware = require("./middlewares/error.middleware");
 const filterPostCommentsMiddleware = require("./middlewares/filterPostComments.middleware");
 
 const locale = process.env.IDIOMA === "es" ? process.env.IDIOMA : "es";
+
+let dbReady = false;
+let dbInitPromise = null;
+
+async function ensureDatabase() {
+    if (dbReady) return;
+
+    if (!dbInitPromise) {
+        dbInitPromise = (async () => {
+            const { sequelize } = require("./db/models");
+            const { runMigrations } = require("./db/migrate");
+
+            await sequelize.authenticate();
+            await runMigrations();
+
+            const syncOptions = {};
+            if (process.env.DB_SYNC_FORCE === "true") {
+                syncOptions.force = true;
+            }
+
+            await sequelize.sync(syncOptions);
+            dbReady = true;
+        })().catch((err) => {
+            dbInitPromise = null;
+            throw err;
+        });
+    }
+
+    await dbInitPromise;
+}
 
 i18n.configure({
     locales: ["es"],
@@ -45,7 +74,7 @@ app.use(express.json());
 
 app.use(async (_req, _res, next) => {
     try {
-        await initDatabase();
+        await ensureDatabase();
         next();
     } catch (err) {
         next(err);
@@ -75,3 +104,4 @@ app.use("/post-images", postImagesRouter);
 app.use(errorMiddleware);
 
 module.exports = app;
+app.ensureDatabase = ensureDatabase;
