@@ -41,6 +41,13 @@ const buildConfig = (env = "development") => {
     };
   }
 
+  if (isServerless()) {
+    throw new Error(
+      "DATABASE_URL no está configurada en Vercel. " +
+        "Agregá la connection string de Neon en Settings → Environment Variables.",
+    );
+  }
+
   const dialect = (process.env.DB_DIALECT || "sqlite").toLowerCase();
 
   if (dialect === "sqlite") {
