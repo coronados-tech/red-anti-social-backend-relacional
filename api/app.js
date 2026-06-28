@@ -23,6 +23,8 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const i18n = require("i18n");
+const swaggerUi = require("swagger-ui-express");
+const YAML = require("yamljs");
 
 const resolveHandler = (mod) => {
   if (typeof mod === "function") return mod;
@@ -111,7 +113,8 @@ function isAllowedCorsOrigin(origin) {
   return false;
 }
 
-const enableSwagger = process.env.NODE_ENV !== "production" || process.env.ENABLE_SWAGGER === "true";
+// Habilitado por defecto (local y Vercel). Desactivar con ENABLE_SWAGGER=false.
+const enableSwagger = process.env.ENABLE_SWAGGER !== "false";
 
 app.get("/health", (_req, res) => {
   const blobStorage = require(path.join(__dirname, "../src/services/blobStorage.service"));
@@ -137,10 +140,15 @@ app.use(express.json());
 app.use(databaseMiddleware);
 
 if (enableSwagger) {
-  const swaggerUi = require("swagger-ui-express");
-  const YAML = require("yamljs");
   const swaggerDocument = YAML.load(path.join(__dirname, "../docs/swagger.yaml"));
-  app.use("/swagger", ...swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  const publicBaseUrl = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
+  if (publicBaseUrl) {
+    swaggerDocument.servers = [
+      { url: publicBaseUrl, description: "Producción" },
+      ...(swaggerDocument.servers || []),
+    ];
+  }
+  app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 }
 
 app.use("/auth", authRouter);

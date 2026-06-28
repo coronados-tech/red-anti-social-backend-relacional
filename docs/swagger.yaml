@@ -16,12 +16,14 @@ info:
         | CACHE_POSTS_TTL_SECONDS | TTL del caché en segundos (por defecto 60) |
         | POSTS_PAGINATION_DELAY_MS | Demora artificial en GET /posts paginado, en ms (por defecto 1500; 0 desactiva) |
         | DB_DIALECT | sqlite, mysql, mariadb o postgres |
-        | ENABLE_SWAGGER | Habilita Swagger UI en producción (por defecto false) |
+        | ENABLE_SWAGGER | Swagger UI en `/swagger` (por defecto habilitado; `false` desactiva) |
     version: 1.0.0
     contact:
         name: Anti-Social Team
 
 servers:
+    - url: https://red-anti-social-backend-relacional.vercel.app
+      description: Producción (Vercel)
     - url: http://localhost:3001
       description: Servidor local (puerto configurable vía variable de entorno PORT)
 

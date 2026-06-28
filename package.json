@@ -19,10 +19,7 @@
   "license": "MIT",
   "devDependencies": {
     "nodemon": "^3.1.14",
-    "sequelize-cli": "^6.6.5",
-    "swagger-jsdoc": "^6.3.0",
-    "swagger-ui-express": "^5.0.1",
-    "yamljs": "^0.3.0"
+    "sequelize-cli": "^6.6.5"
   },
   "dependencies": {
     "@vercel/blob": "^2.5.0",
@@ -38,6 +35,8 @@
     "pg": "^8.16.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.8",
-    "sqlite3": "^6.0.1"
+    "sqlite3": "^6.0.1",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
   }
 }
