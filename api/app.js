@@ -5,8 +5,6 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const i18n = require("i18n");
-const errorMiddleware = require("./middlewares/error.middleware");
-const filterPostCommentsMiddleware = require("./middlewares/filterPostComments.middleware");
 
 const resolveHandler = (mod) => {
     if (typeof mod === "function") return mod;
@@ -24,8 +22,8 @@ async function ensureDatabase() {
 
     if (!dbInitPromise) {
         dbInitPromise = (async () => {
-            const { sequelize } = require("./db/models");
-            const { runMigrations } = require("./db/migrate");
+            const { sequelize } = require("../src/db/models");
+            const { runMigrations } = require("../src/db/migrate");
 
             await sequelize.authenticate();
             await runMigrations();
@@ -46,20 +44,28 @@ async function ensureDatabase() {
     await dbInitPromise;
 }
 
+function databaseMiddleware(_req, _res, next) {
+    ensureDatabase().then(() => next()).catch(next);
+}
+
 i18n.configure({
     locales: ["es"],
-    directory: path.join(__dirname, "locales"),
+    directory: path.join(__dirname, "../src/locales"),
     defaultLocale: locale,
     autoReload: true,
     updateFiles: false,
 });
 
-const authRouter = resolveHandler(require("./routes/auth.routes"));
-const commentsRouter = resolveHandler(require("./routes/comments.route"));
-const usersRouter = resolveHandler(require("./routes/user.routes"));
-const postsRouter = resolveHandler(require("./routes/post.routes"));
-const postImagesRouter = resolveHandler(require("./routes/postimage.routes"));
-const tagsRouter = resolveHandler(require("./routes/tag.routes"));
+const authRouter = resolveHandler(require("../src/routes/auth.routes"));
+const commentsRouter = resolveHandler(require("../src/routes/comments.route"));
+const usersRouter = resolveHandler(require("../src/routes/user.routes"));
+const postsRouter = resolveHandler(require("../src/routes/post.routes"));
+const postImagesRouter = resolveHandler(require("../src/routes/postimage.routes"));
+const tagsRouter = resolveHandler(require("../src/routes/tag.routes"));
+const errorMiddleware = resolveHandler(require("../src/middlewares/error.middleware"));
+const filterPostCommentsMiddleware = resolveHandler(
+    require("../src/middlewares/filterPostComments.middleware"),
+);
 
 const app = express();
 
@@ -70,22 +76,10 @@ const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173,http://lo
 
 const enableSwagger = process.env.NODE_ENV !== "production" || process.env.ENABLE_SWAGGER === "true";
 
-app.use(
-    cors({
-        origin: corsOrigins,
-    }),
-);
-app.use(i18n.init.bind(i18n));
+app.use(cors({ origin: corsOrigins }));
+app.use((req, res, next) => i18n.init(req, res, next));
 app.use(express.json());
-
-app.use(async (_req, _res, next) => {
-    try {
-        await ensureDatabase();
-        next();
-    } catch (err) {
-        next(err);
-    }
-});
+app.use(databaseMiddleware);
 
 if (enableSwagger) {
     const swaggerUi = require("swagger-ui-express");
@@ -97,7 +91,7 @@ if (enableSwagger) {
 app.use("/auth", authRouter);
 app.use("/comments", commentsRouter);
 app.use("/users", usersRouter);
-app.use("/posts", resolveHandler(filterPostCommentsMiddleware), postsRouter);
+app.use("/posts", filterPostCommentsMiddleware, postsRouter);
 app.use("/tags", tagsRouter);
 
 const uploadsRoot = process.env.VERCEL
@@ -106,8 +100,7 @@ const uploadsRoot = process.env.VERCEL
 
 app.use("/uploads", express.static(uploadsRoot));
 app.use("/post-images", postImagesRouter);
-
-app.use(resolveHandler(errorMiddleware));
+app.use(errorMiddleware);
 
 module.exports = app;
 app.ensureDatabase = ensureDatabase;
