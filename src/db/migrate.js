@@ -1,7 +1,19 @@
 const { sequelize, Sequelize, Post } = require("./models");
 const { buildSlug, ensureUniqueSlug } = require("../helpers/slugHelper");
 
+const tableExists = async (table) => {
+  const queryInterface = sequelize.getQueryInterface();
+  try {
+    await queryInterface.describeTable(table);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const addColumnIfMissing = async (table, column, definition) => {
+  if (!(await tableExists(table))) return;
+
   const queryInterface = sequelize.getQueryInterface();
   const description = await queryInterface.describeTable(table);
 
@@ -11,13 +23,19 @@ const addColumnIfMissing = async (table, column, definition) => {
 };
 
 const backfillPostTitles = async () => {
+  if (!(await tableExists("Posts"))) return;
+
   const queryInterface = sequelize.getQueryInterface();
   const description = await queryInterface.describeTable("Posts");
 
   if (!description.titulo) return;
 
+  const dialect = sequelize.getDialect();
+  const table = dialect === "postgres" ? '"Posts"' : "Posts";
+  const column = dialect === "postgres" ? '"titulo"' : "titulo";
+
   await sequelize.query(
-    "UPDATE Posts SET titulo = 'Sin título' WHERE titulo IS NULL OR titulo = ''",
+    `UPDATE ${table} SET ${column} = 'Sin título' WHERE ${column} IS NULL OR ${column} = ''`,
   );
 };
 
@@ -34,6 +52,8 @@ const cleanupSqliteBackupTables = async () => {
 };
 
 const fixFollowersUniqueConstraints = async () => {
+  if (!(await tableExists("Followers"))) return;
+
   const queryInterface = sequelize.getQueryInterface();
   const description = await queryInterface.describeTable("Followers");
 
@@ -103,6 +123,8 @@ const fixFollowersUniqueConstraints = async () => {
 };
 
 const backfillPostSlugs = async () => {
+  if (!(await tableExists("Posts"))) return;
+
   const queryInterface = sequelize.getQueryInterface();
   const description = await queryInterface.describeTable("Posts");
 
@@ -120,6 +142,8 @@ const backfillPostSlugs = async () => {
 };
 
 const ensurePostSlugUniqueIndex = async () => {
+  if (!(await tableExists("Posts"))) return;
+
   const queryInterface = sequelize.getQueryInterface();
   const description = await queryInterface.describeTable("Posts");
 

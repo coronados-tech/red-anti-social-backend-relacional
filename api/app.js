@@ -30,7 +30,6 @@ async function ensureDatabase() {
             const { runMigrations } = require("../src/db/migrate");
 
             await sequelize.authenticate();
-            await runMigrations();
 
             const syncOptions = {};
             if (process.env.DB_SYNC_FORCE === "true") {
@@ -38,6 +37,7 @@ async function ensureDatabase() {
             }
 
             await sequelize.sync(syncOptions);
+            await runMigrations();
             dbReady = true;
         })().catch((err) => {
             dbInitPromise = null;
