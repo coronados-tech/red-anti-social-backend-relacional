@@ -1,3 +1,4 @@
-const app = require("../api/app");
+const express = require("express");
 
-module.exports = app;
+// Entrypoint para Vercel (debe importar express en este archivo)
+module.exports = require("../api/app");
