@@ -6,6 +6,7 @@ const {
   createPost,
   getAllPosts,
   getPostById,
+  getPostBySlug,
   updatePost,
   deletePost,
 } = require("../controllers/post.controller");
@@ -37,6 +38,13 @@ router.get(
   existValidateMiddleware(User, "user_id", { optional: true }),
   existValidateMiddleware(User, "viewer_id", { optional: true }),
   getAllPosts
+);
+
+router.get(
+  "/slug/:slug",
+  querySchemaValidatorMiddleware(viewerIdQuerySchema),
+  existValidateMiddleware(User, "viewer_id", { optional: true }),
+  getPostBySlug
 );
 
 router.post(

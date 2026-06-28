@@ -14,6 +14,7 @@ info:
         | MESES | Antigüedad máxima en meses para comentarios en publicaciones (por defecto 6) |
         | CACHE_POSTS_ENABLED | Caché en memoria para GET de posts (por defecto true) |
         | CACHE_POSTS_TTL_SECONDS | TTL del caché en segundos (por defecto 60) |
+        | POSTS_PAGINATION_DELAY_MS | Demora artificial en GET /posts paginado, en ms (por defecto 1500; 0 desactiva) |
         | DB_DIALECT | sqlite, mysql, mariadb o postgres |
         | ENABLE_SWAGGER | Habilita Swagger UI en producción (por defecto false) |
     version: 1.0.0
@@ -308,20 +309,41 @@ paths:
                   schema:
                       type: integer
                       minimum: 1
+                - name: page
+                  in: query
+                  description: Número de página (requiere paginación; por defecto 1)
+                  required: false
+                  schema:
+                      type: integer
+                      minimum: 1
+                      default: 1
+                - name: limit
+                  in: query
+                  description: Cantidad de publicaciones por página (requiere paginación; por defecto 10, máximo 50)
+                  required: false
+                  schema:
+                      type: integer
+                      minimum: 1
+                      maximum: 50
+                      default: 10
                 - $ref: "#/components/parameters/ViewerIdQuery"
             responses:
                 "200":
                     description: |
                         Lista de publicaciones con usuario, imágenes, tags y comentarios visibles.
+                        Sin `page` ni `limit` devuelve un array completo (cacheado en memoria).
+                        Con `page` y/o `limit` devuelve un objeto paginado (`items`, `page`, `limit`, `total`, `hasMore`).
                         Los comentarios con antigüedad mayor o igual a `MESES` no se incluyen (filtro por `monthsOld`).
                         Incluye posteos de usuarios con perfil público o privado. Si se filtra por `user_id`,
                         un perfil privado solo es accesible para el propio usuario o sus seguidores (`viewer_id`).
                     content:
                         application/json:
                             schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/PostDetail"
+                                oneOf:
+                                    - type: array
+                                      items:
+                                          $ref: "#/components/schemas/PostDetail"
+                                    - $ref: "#/components/schemas/PaginatedPosts"
                 "400":
                     $ref: "#/components/responses/ValidationError"
                 "403":
@@ -952,7 +974,7 @@ components:
                     format: date-time
                 gender:
                     type: string
-                    enum: [femenino, Femenino, masculino, Masculino, otro, Otro]
+                    enum: [masculino, Masculino, femenino, Femenino, x, X, otro, Otro]
                 profilePicture:
                     type: string
                     format: uri
@@ -998,7 +1020,7 @@ components:
                     format: date
                 gender:
                     type: string
-                    enum: [femenino, Femenino, masculino, Masculino, otro, Otro]
+                    enum: [masculino, Masculino, femenino, Femenino, x, X, otro, Otro]
                 isProfilePublic:
                     type: boolean
                     default: true
@@ -1031,7 +1053,7 @@ components:
                     format: date
                 gender:
                     type: string
-                    enum: [femenino, Femenino, masculino, Masculino, otro, Otro]
+                    enum: [masculino, Masculino, femenino, Femenino, x, X, otro, Otro]
                 isProfilePublic:
                     type: boolean
                     description: true = perfil público; false = solo visible para seguidores
@@ -1092,6 +1114,27 @@ components:
                         type: string
                         minLength: 1
                         maxLength: 50
+
+        PaginatedPosts:
+            type: object
+            required: [items, page, limit, total, hasMore]
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/PostDetail"
+                page:
+                    type: integer
+                    minimum: 1
+                limit:
+                    type: integer
+                    minimum: 1
+                    maximum: 50
+                total:
+                    type: integer
+                    minimum: 0
+                hasMore:
+                    type: boolean
 
         PostDetail:
             type: object

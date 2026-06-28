@@ -99,13 +99,23 @@ const birthDate = Joi.date()
     });
 
 const gender = Joi.string()
-    .valid("femenino", "Femenino", "masculino", "Masculino", "otro", "Otro")
+    .valid(
+        "femenino",
+        "Femenino",
+        "masculino",
+        "Masculino",
+        "x",
+        "X",
+        "otro",
+        "Otro",
+    )
     .required()
     .messages({
         "string.base": "El género debe ser un string",
         "string.empty": "El género no puede estar vacío",
         "any.required": "El género es obligatorio",
-        "any.only": "El género debe ser 'femenino', 'masculino' u 'otro'",
+        "any.only":
+            "El género debe ser 'masculino', 'femenino' o 'x'",
     });
 
 const isProfilePublic = Joi.boolean().messages({

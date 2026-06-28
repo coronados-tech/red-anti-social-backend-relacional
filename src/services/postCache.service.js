@@ -36,8 +36,11 @@ const invalidateLists = () => {
     }
 };
 
-const deletePost = (id) => {
+const deletePost = (id, slug) => {
     store.delete(`post:${id}`);
+    if (slug) {
+        store.delete(`post:slug:${slug}`);
+    }
     invalidateLists();
 };
 

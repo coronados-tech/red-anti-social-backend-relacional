@@ -51,6 +51,19 @@ const updatePostSchema = Joi.object({
     "object.min": "Debe enviar al menos un campo para actualizar (titulo, description y/o tags)",
   });
 
+const pageField = Joi.number().integer().min(1).messages({
+  "number.base": "page debe ser un número",
+  "number.integer": "page debe ser un número entero",
+  "number.min": "page debe ser mayor o igual a {#limit}",
+});
+
+const limitField = Joi.number().integer().min(1).max(50).messages({
+  "number.base": "limit debe ser un número",
+  "number.integer": "limit debe ser un número entero",
+  "number.min": "limit debe ser mayor o igual a {#limit}",
+  "number.max": "limit debe ser como máximo {#limit}",
+});
+
 const getAllPostsQuerySchema = Joi.object({
   user_id: userIdField.optional(),
   viewer_id: Joi.number().integer().positive().messages({
@@ -58,6 +71,8 @@ const getAllPostsQuerySchema = Joi.object({
     "number.integer": "viewer_id debe ser un número entero",
     "number.positive": "viewer_id debe ser mayor a 0",
   }).optional(),
+  page: pageField.optional(),
+  limit: limitField.optional(),
 })
   .unknown(false)
   .messages({

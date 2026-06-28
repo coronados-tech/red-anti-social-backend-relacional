@@ -13,14 +13,23 @@ const createPost = async (req, res) => {
 };
 
 const getAllPosts = async (req, res) => {
-    const { user_id, viewer_id } = req.query;
-    const posts = await postService.findAll({ user_id, viewer_id });
+    const { user_id, viewer_id, page, limit } = req.query;
+    const isPaginated = page !== undefined || limit !== undefined;
 
-    if (posts?.forbidden) {
+    const result = isPaginated
+        ? await postService.findPaginated({
+              user_id,
+              viewer_id,
+              page: page ?? 1,
+              limit: limit ?? 10,
+          })
+        : await postService.findAll({ user_id, viewer_id });
+
+    if (result?.forbidden) {
         return respondPostForbidden(res);
     }
 
-    res.status(HTTP.OK).json(posts);
+    res.status(HTTP.OK).json(result);
 };
 
 const getPostById = async (req, res) => {
@@ -30,6 +39,19 @@ const getPostById = async (req, res) => {
     if (!post) {
         return res.status(HTTP.NOT_FOUND).json({
             message: res.__("id_dont_exist", { id, nombreModelo: "Post" }),
+        });
+    }
+
+    res.status(HTTP.OK).json(post);
+};
+
+const getPostBySlug = async (req, res) => {
+    const { slug } = req.params;
+    const post = await postService.findBySlug(slug);
+
+    if (!post) {
+        return res.status(HTTP.NOT_FOUND).json({
+            message: res.__("id_dont_exist", { id: slug, nombreModelo: "Post" }),
         });
     }
 
@@ -56,6 +78,7 @@ module.exports = {
     createPost,
     getAllPosts,
     getPostById,
+    getPostBySlug,
     updatePost,
     deletePost,
 };

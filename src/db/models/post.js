@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
   Post.init(
     {
       titulo: { type: DataTypes.STRING(200), allowNull: false },
+      slug: { type: DataTypes.STRING(220), allowNull: false, unique: true },
       description: { type: DataTypes.TEXT, allowNull: false },
       //publicationDate: { type: DataTypes.DATE, allowNull: false },
       createdAt: {

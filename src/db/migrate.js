@@ -1,4 +1,5 @@
-const { sequelize, Sequelize } = require("./models");
+const { sequelize, Sequelize, Post } = require("./models");
+const { buildSlug, ensureUniqueSlug } = require("../helpers/slugHelper");
 
 const addColumnIfMissing = async (table, column, definition) => {
   const queryInterface = sequelize.getQueryInterface();
@@ -101,6 +102,62 @@ const fixFollowersUniqueConstraints = async () => {
   }
 };
 
+const backfillPostSlugs = async () => {
+  const queryInterface = sequelize.getQueryInterface();
+  const description = await queryInterface.describeTable("Posts");
+
+  if (!description.slug) return;
+
+  const posts = await Post.findAll({ attributes: ["id", "titulo", "slug"] });
+
+  for (const post of posts) {
+    if (post.slug) continue;
+
+    const baseSlug = buildSlug(post.titulo);
+    const slug = await ensureUniqueSlug(Post, baseSlug, post.id);
+    await post.update({ slug });
+  }
+};
+
+const ensurePostSlugUniqueIndex = async () => {
+  const queryInterface = sequelize.getQueryInterface();
+  const description = await queryInterface.describeTable("Posts");
+
+  if (!description.slug) return;
+
+  const dialect = sequelize.getDialect();
+  const indexName = "posts_slug_unique";
+
+  if (dialect === "sqlite") {
+    const [indexes] = await sequelize.query(
+      "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'Posts' AND name = ?",
+      { replacements: [indexName] },
+    );
+    if (indexes.length > 0) return;
+
+    await sequelize.query(
+      `CREATE UNIQUE INDEX ${indexName} ON Posts (slug) WHERE slug IS NOT NULL`,
+    );
+    return;
+  }
+
+  if (dialect === "mysql" || dialect === "mariadb") {
+    const [indexes] = await sequelize.query("SHOW INDEX FROM Posts");
+    if (indexes.some((index) => index.Key_name === indexName)) return;
+
+    await sequelize.query(
+      `CREATE UNIQUE INDEX ${indexName} ON Posts (slug)`,
+    );
+    return;
+  }
+
+  if (dialect === "postgres") {
+    await sequelize.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS ${indexName} ON "Posts" (slug)
+    `);
+  }
+};
+
 const runMigrations = async () => {
   await addColumnIfMissing("Users", "profilePicture", {
     type: Sequelize.STRING,
@@ -112,6 +169,14 @@ const runMigrations = async () => {
     allowNull: false,
     defaultValue: "Sin título",
   });
+
+  await addColumnIfMissing("Posts", "slug", {
+    type: Sequelize.STRING(220),
+    allowNull: true,
+  });
+
+  await backfillPostSlugs();
+  await ensurePostSlugUniqueIndex();
 
   await addColumnIfMissing("Users", "isProfilePublic", {
     type: Sequelize.BOOLEAN,
