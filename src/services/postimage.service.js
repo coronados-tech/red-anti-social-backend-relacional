@@ -14,6 +14,7 @@ const findByPostId = async (postId) => {
 
     const images = await PostImage.findAll({
         where: { post_id: postId },
+        order: [["id", "ASC"]],
     });
 
     return { post, images };

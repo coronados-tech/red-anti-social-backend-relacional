@@ -10,7 +10,12 @@ const postIncludes = [
     as: "user",
     attributes: ["id", "nickname", "name", "lastName", "profilePicture", "isProfilePublic"],
   },
-  { model: PostImage, as: "postImages" },
+  {
+    model: PostImage,
+    as: "postImages",
+    separate: true,
+    order: [["id", "ASC"]],
+  },
   { model: Tag, as: "tags", attributes: ["id", "name"] },
   {
     model: Comment,
