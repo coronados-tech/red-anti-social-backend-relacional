@@ -2,7 +2,6 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 // Vercel no detecta drivers que Sequelize carga dinámicamente
-require("mysql2");
 require("pg");
 require("sqlite3");
 

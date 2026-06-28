@@ -30,6 +30,14 @@ const loadDialectDriver = (dialect) => {
 loadDialectDriver(config.dialect);
 
 const createSequelize = (dbConfig) => {
+  if (dbConfig.url) {
+    return new Sequelize(dbConfig.url, {
+      dialect: dbConfig.dialect,
+      logging: dbConfig.logging,
+      dialectOptions: dbConfig.dialectOptions,
+    });
+  }
+
   if (dbConfig.dialect === "sqlite") {
     return new Sequelize({
       dialect: "sqlite",
@@ -47,6 +55,7 @@ const createSequelize = (dbConfig) => {
       port: dbConfig.port,
       dialect: dbConfig.dialect,
       logging: dbConfig.logging,
+      dialectOptions: dbConfig.dialectOptions,
     },
   );
 };

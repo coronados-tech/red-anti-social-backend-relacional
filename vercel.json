@@ -14,7 +14,7 @@
   ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "node_modules/mysql2/**"
+      "includeFiles": "node_modules/{pg,pg-hstore,sqlite3}/**"
     }
   }
 }

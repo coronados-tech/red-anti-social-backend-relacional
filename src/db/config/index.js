@@ -28,8 +28,20 @@ const ensureSqliteDir = (storagePath) => {
 };
 
 const buildConfig = (env = "development") => {
-  const dialect = (process.env.DB_DIALECT || "sqlite").toLowerCase();
   const logging = process.env.DB_LOGGING === "true" ? console.log : false;
+
+  if (process.env.DATABASE_URL) {
+    return {
+      url: process.env.DATABASE_URL,
+      dialect: "postgres",
+      logging,
+      dialectOptions: {
+        ssl: { require: true, rejectUnauthorized: false },
+      },
+    };
+  }
+
+  const dialect = (process.env.DB_DIALECT || "sqlite").toLowerCase();
 
   if (dialect === "sqlite") {
     const storage = isServerless()
@@ -46,8 +58,7 @@ const buildConfig = (env = "development") => {
   }
 
   const defaultPort = DEFAULT_PORTS[dialect] ?? 3306;
-
-  return {
+  const config = {
     dialect,
     host: process.env.DB_HOST || "127.0.0.1",
     port: Number(process.env.DB_PORT || defaultPort),
@@ -56,6 +67,14 @@ const buildConfig = (env = "development") => {
     password: process.env.DB_PASSWORD || null,
     logging,
   };
+
+  if (dialect === "postgres" && isServerless()) {
+    config.dialectOptions = {
+      ssl: { require: true, rejectUnauthorized: false },
+    };
+  }
+
+  return config;
 };
 
 module.exports = buildConfig;
