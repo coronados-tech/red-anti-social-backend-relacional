@@ -10,6 +10,25 @@ const env = process.env.NODE_ENV || "development";
 const config = buildConfig(env);
 const db = {};
 
+const loadDialectDriver = (dialect) => {
+  switch (dialect) {
+    case "mysql":
+    case "mariadb":
+      require("mysql2");
+      break;
+    case "postgres":
+      require("pg");
+      break;
+    case "sqlite":
+      require("sqlite3");
+      break;
+    default:
+      break;
+  }
+};
+
+loadDialectDriver(config.dialect);
+
 const createSequelize = (dbConfig) => {
   if (dbConfig.dialect === "sqlite") {
     return new Sequelize({
