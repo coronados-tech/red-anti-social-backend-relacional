@@ -8,7 +8,13 @@ const DEFAULT_PORTS = {
 };
 
 const isServerless = () =>
-  Boolean(process.env.VERCEL || process.env.VERCEL_ENV || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  Boolean(
+    process.env.VERCEL ||
+      process.env.VERCEL_ENV ||
+      process.env.AWS_LAMBDA_FUNCTION_NAME ||
+      process.env.LAMBDA_TASK_ROOT ||
+      (typeof process.cwd === "function" && process.cwd().startsWith("/var/task")),
+  );
 
 const ensureSqliteDir = (storagePath) => {
   const dir = path.dirname(storagePath);
@@ -29,10 +35,11 @@ const ensureSqliteDir = (storagePath) => {
 
 const buildConfig = (env = "development") => {
   const logging = process.env.DB_LOGGING === "true" ? console.log : false;
+  const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
-  if (process.env.DATABASE_URL) {
+  if (databaseUrl) {
     return {
-      url: process.env.DATABASE_URL,
+      url: databaseUrl,
       dialect: "postgres",
       logging,
       dialectOptions: {
@@ -43,8 +50,8 @@ const buildConfig = (env = "development") => {
 
   if (isServerless()) {
     throw new Error(
-      "DATABASE_URL no está configurada en Vercel. " +
-        "Agregá la connection string de Neon en Settings → Environment Variables.",
+      "Falta DATABASE_URL en Vercel. " +
+        "Settings → Environment Variables → agregar DATABASE_URL con la connection string de Neon → Redeploy.",
     );
   }
 

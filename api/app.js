@@ -1,9 +1,24 @@
 const dotenv = require("dotenv");
-dotenv.config();
 
-// Vercel no detecta drivers que Sequelize carga dinámicamente
+if (!process.env.VERCEL) {
+  dotenv.config();
+}
+
+const runningOnVercel =
+  Boolean(process.env.VERCEL || process.env.VERCEL_ENV) ||
+  (typeof process.cwd === "function" && process.cwd().startsWith("/var/task"));
+
+if (runningOnVercel && !process.env.DATABASE_URL && !process.env.POSTGRES_URL) {
+  throw new Error(
+    "Falta DATABASE_URL en Vercel. " +
+      "Entrá a Settings → Environment Variables, pegá la connection string de Neon, y hacé Redeploy.",
+  );
+}
+
 require("pg");
-require("sqlite3");
+if (!runningOnVercel) {
+  require("sqlite3");
+}
 
 const express = require("express");
 const cors = require("cors");
@@ -79,6 +94,14 @@ const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173,http://lo
     .filter(Boolean);
 
 const enableSwagger = process.env.NODE_ENV !== "production" || process.env.ENABLE_SWAGGER === "true";
+
+app.get("/health", (_req, res) => {
+    res.json({
+        ok: true,
+        hasDatabaseUrl: Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL),
+        onVercel: runningOnVercel,
+    });
+});
 
 app.use(cors({ origin: corsOrigins }));
 app.use((req, res, next) => i18n.init(req, res, next));
