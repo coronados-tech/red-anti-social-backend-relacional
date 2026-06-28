@@ -1,8 +1,13 @@
 const fs = require("fs");
 const path = require("path");
 
-const buildPublicUrl = (req, filename, folder = "posts") =>
-  `${req.protocol}://${req.get("host")}/uploads/${folder}/${filename}`;
+const buildPublicUrl = (req, filename, folder = "posts") => {
+  const configuredBase = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
+  if (configuredBase) {
+    return `${configuredBase}/uploads/${folder}/${filename}`;
+  }
+  return `${req.protocol}://${req.get("host")}/uploads/${folder}/${filename}`;
+};
 
 const deleteFileFromUrl = (url) => {
   if (!url) return;

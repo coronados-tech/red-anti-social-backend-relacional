@@ -145,11 +145,15 @@ app.use("/users", usersRouter);
 app.use("/posts", filterPostCommentsMiddleware, postsRouter);
 app.use("/tags", tagsRouter);
 
-const uploadsRoot = runningOnVercel
+const bundledUploadsRoot = path.join(__dirname, "../uploads");
+const runtimeUploadsRoot = runningOnVercel
   ? path.join("/tmp", "uploads")
-  : path.join(__dirname, "../uploads");
+  : bundledUploadsRoot;
 
-app.use("/uploads", express.static(uploadsRoot));
+app.use("/uploads", express.static(bundledUploadsRoot));
+if (runningOnVercel) {
+  app.use("/uploads", express.static(runtimeUploadsRoot));
+}
 app.use("/post-images", postImagesRouter);
 app.use(errorMiddleware);
 

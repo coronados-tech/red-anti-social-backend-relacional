@@ -11,6 +11,7 @@
     "seed:posts": "node src/db/seed-demo.js --posts-only",
     "seed:memes": "node src/db/seed-demo.js --memes-only",
     "seed:comments": "node src/db/seed-demo.js --comments-only",
+    "fix:media-urls": "node scripts/fix-media-urls.js",
     "seed:memes:crop": "powershell -ExecutionPolicy Bypass -File scripts/crop-meme-grid.ps1",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

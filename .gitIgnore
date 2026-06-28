@@ -3,6 +3,9 @@ package-lock.json
 .env
 data/*
 uploads/*
+!uploads/profiles/
 !uploads/posts/
-!uploads/posts/.gitkeepstat
+uploads/profiles/*
+!uploads/profiles/integrante-*
 uploads/posts/*
+!uploads/posts/meme-post-*
