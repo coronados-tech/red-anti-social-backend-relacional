@@ -8,6 +8,12 @@ const i18n = require("i18n");
 const errorMiddleware = require("./middlewares/error.middleware");
 const filterPostCommentsMiddleware = require("./middlewares/filterPostComments.middleware");
 
+const resolveHandler = (mod) => {
+    if (typeof mod === "function") return mod;
+    if (mod?.default && typeof mod.default === "function") return mod.default;
+    return mod;
+};
+
 const locale = process.env.IDIOMA === "es" ? process.env.IDIOMA : "es";
 
 let dbReady = false;
@@ -48,12 +54,12 @@ i18n.configure({
     updateFiles: false,
 });
 
-const authRouter = require("./routes/auth.routes");
-const commentsRouter = require("./routes/comments.route");
-const usersRouter = require("./routes/user.routes");
-const postsRouter = require("./routes/post.routes");
-const postImagesRouter = require("./routes/postimage.routes");
-const tagsRouter = require("./routes/tag.routes");
+const authRouter = resolveHandler(require("./routes/auth.routes"));
+const commentsRouter = resolveHandler(require("./routes/comments.route"));
+const usersRouter = resolveHandler(require("./routes/user.routes"));
+const postsRouter = resolveHandler(require("./routes/post.routes"));
+const postImagesRouter = resolveHandler(require("./routes/postimage.routes"));
+const tagsRouter = resolveHandler(require("./routes/tag.routes"));
 
 const app = express();
 
@@ -69,7 +75,7 @@ app.use(
         origin: corsOrigins,
     }),
 );
-app.use(i18n.init);
+app.use(i18n.init.bind(i18n));
 app.use(express.json());
 
 app.use(async (_req, _res, next) => {
@@ -85,13 +91,13 @@ if (enableSwagger) {
     const swaggerUi = require("swagger-ui-express");
     const YAML = require("yamljs");
     const swaggerDocument = YAML.load(path.join(__dirname, "../docs/swagger.yaml"));
-    app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    app.use("/swagger", ...swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 }
 
 app.use("/auth", authRouter);
 app.use("/comments", commentsRouter);
 app.use("/users", usersRouter);
-app.use("/posts", filterPostCommentsMiddleware, postsRouter);
+app.use("/posts", resolveHandler(filterPostCommentsMiddleware), postsRouter);
 app.use("/tags", tagsRouter);
 
 const uploadsRoot = process.env.VERCEL
@@ -101,7 +107,7 @@ const uploadsRoot = process.env.VERCEL
 app.use("/uploads", express.static(uploadsRoot));
 app.use("/post-images", postImagesRouter);
 
-app.use(errorMiddleware);
+app.use(resolveHandler(errorMiddleware));
 
 module.exports = app;
 app.ensureDatabase = ensureDatabase;
