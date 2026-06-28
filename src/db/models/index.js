@@ -7,6 +7,21 @@ const process = require("process");
 const buildConfig = require("../config");
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || "development";
+
+const isVercelRuntime = () =>
+  Boolean(process.env.VERCEL || process.env.VERCEL_ENV) ||
+  (typeof process.cwd === "function" && process.cwd().startsWith("/var/task")) ||
+  __dirname.includes("/var/task");
+
+const hasDatabaseUrl = () =>
+  Boolean((process.env.DATABASE_URL || process.env.POSTGRES_URL || "").trim());
+
+if (isVercelRuntime() && !hasDatabaseUrl()) {
+  throw new Error(
+    "Falta DATABASE_URL en Vercel. Agregala en Settings → Environment Variables y hacé Redeploy.",
+  );
+}
+
 const config = buildConfig(env);
 const db = {};
 

@@ -35,7 +35,7 @@ const ensureSqliteDir = (storagePath) => {
 
 const buildConfig = (env = "development") => {
   const logging = process.env.DB_LOGGING === "true" ? console.log : false;
-  const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  const databaseUrl = (process.env.DATABASE_URL || process.env.POSTGRES_URL || "").trim();
 
   if (databaseUrl) {
     return {
