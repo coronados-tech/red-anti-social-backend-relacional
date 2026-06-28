@@ -7,10 +7,23 @@ const DEFAULT_PORTS = {
   postgres: 5432,
 };
 
+const isServerless = () =>
+  Boolean(process.env.VERCEL || process.env.VERCEL_ENV || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
 const ensureSqliteDir = (storagePath) => {
   const dir = path.dirname(storagePath);
-  if (!fs.existsSync(dir)) {
+  if (fs.existsSync(dir)) return;
+
+  try {
     fs.mkdirSync(dir, { recursive: true });
+  } catch (err) {
+    if (err.code === "ENOENT" || err.code === "EACCES" || err.code === "EROFS") {
+      throw new Error(
+        `No se puede crear el directorio SQLite en "${dir}". ` +
+          "En Vercel usá DB_DIALECT=postgres o mysql, o no definas DB_STORAGE (usa /tmp automáticamente).",
+      );
+    }
+    throw err;
   }
 };
 
@@ -19,10 +32,9 @@ const buildConfig = (env = "development") => {
   const logging = process.env.DB_LOGGING === "true" ? console.log : false;
 
   if (dialect === "sqlite") {
-    const defaultStorage = process.env.VERCEL
+    const storage = isServerless()
       ? path.join("/tmp", "datastore.db")
-      : path.join(process.cwd(), "data", "datastore.db");
-    const storage = process.env.DB_STORAGE || defaultStorage;
+      : process.env.DB_STORAGE || path.join(process.cwd(), "data", "datastore.db");
 
     ensureSqliteDir(storage);
 
