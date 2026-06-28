@@ -19,9 +19,10 @@ const buildConfig = (env = "development") => {
   const logging = process.env.DB_LOGGING === "true" ? console.log : false;
 
   if (dialect === "sqlite") {
-    const storage =
-      process.env.DB_STORAGE ||
-      path.join(process.cwd(), "data", "datastore.db");
+    const defaultStorage = process.env.VERCEL
+      ? path.join("/tmp", "datastore.db")
+      : path.join(process.cwd(), "data", "datastore.db");
+    const storage = process.env.DB_STORAGE || defaultStorage;
 
     ensureSqliteDir(storage);
 
