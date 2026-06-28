@@ -1,7 +1,7 @@
 const path = require("path");
 const { mapUploadError } = require("../helpers/uploadError.helper");
-const { createStorage, MB } = require("../services/storage.service");
-
+const { createStorage, createMemoryStorage, MB } = require("../services/storage.service");
+const blobStorage = require("../services/blobStorage.service");
 const { getRuntimeUploadsRoot } = require("../helpers/fileHelper");
 
 const uploadsRoot = getRuntimeUploadsRoot();
@@ -16,11 +16,16 @@ const postImageStorage = createStorage({
   maxFileSize: IMAGE_MAX_SIZE,
 });
 
-const profilePictureStorage = createStorage({
-  destination: PROFILE_PICTURE_UPLOAD_DIR,
-  allowedMimeTypes: IMAGE_MIMES,
-  maxFileSize: IMAGE_MAX_SIZE,
-});
+const profilePictureStorage = blobStorage.isEnabled()
+  ? createMemoryStorage({
+      allowedMimeTypes: IMAGE_MIMES,
+      maxFileSize: IMAGE_MAX_SIZE,
+    })
+  : createStorage({
+      destination: PROFILE_PICTURE_UPLOAD_DIR,
+      allowedMimeTypes: IMAGE_MIMES,
+      maxFileSize: IMAGE_MAX_SIZE,
+    });
 
 const respondUploadError = (res, { status, messageKey, params = {} }) =>
   res.status(status).json({ message: res.__(messageKey, params) });

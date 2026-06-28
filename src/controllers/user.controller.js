@@ -1,6 +1,7 @@
 const HTTP = require("../config/HttpCode");
 const { User } = require("../db/models");
-const { buildPublicUrl, deleteFileFromUrl } = require("../helpers/fileHelper");
+const { buildPublicUrl } = require("../helpers/fileHelper");
+const blobStorage = require("../services/blobStorage.service");
 const followerService = require("../services/follower.service");
 const userService = require("../services/user.service");
 
@@ -40,7 +41,7 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
     const { id } = req.params;
     const user = await User.findByPk(id);
-    deleteFileFromUrl(user.profilePicture);
+    await blobStorage.deleteIfStored(user.profilePicture);
     await user.destroy();
     res.status(HTTP.OK).json({ message: res.__("delete_user", { id }) });
 };
@@ -56,10 +57,13 @@ const uploadUserProfilePicture = async (req, res) => {
     const user = await User.findByPk(id);
 
     if (user.profilePicture) {
-        deleteFileFromUrl(user.profilePicture);
+        await blobStorage.deleteIfStored(user.profilePicture);
     }
 
-    const url = buildPublicUrl(req, req.file.filename, "profiles");
+    const url = blobStorage.isEnabled()
+        ? await blobStorage.saveProfileImage(req.file)
+        : buildPublicUrl(req, req.file.filename, "profiles");
+
     await user.update({ profilePicture: url });
 
     res.status(HTTP.OK).json(user);
@@ -75,7 +79,7 @@ const deleteUserProfilePicture = async (req, res) => {
         });
     }
 
-    deleteFileFromUrl(user.profilePicture);
+    await blobStorage.deleteIfStored(user.profilePicture);
     await user.update({ profilePicture: null });
 
     res.status(HTTP.OK).json({

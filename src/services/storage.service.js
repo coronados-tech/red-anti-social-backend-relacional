@@ -61,4 +61,31 @@ const createStorage = ({
   };
 };
 
-module.exports = { createStorage, ensureDir, MB };
+const createMemoryStorage = ({
+  allowedMimeTypes,
+  maxFileSize,
+  invalidTypeMessageKey = "upload_invalid_type",
+  fileTooLargeMessageKey = "upload_file_too_large",
+}) => {
+  if (!allowedMimeTypes?.length || !maxFileSize) {
+    throw new Error(i18n.__("storage_config_required"));
+  }
+
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    fileFilter: createFileFilter(allowedMimeTypes, invalidTypeMessageKey),
+    limits: { fileSize: maxFileSize },
+  });
+
+  return {
+    upload,
+    destination: null,
+    errorConfig: {
+      invalidTypeMessageKey,
+      fileTooLargeMessageKey,
+      maxFileSize,
+    },
+  };
+};
+
+module.exports = { createStorage, createMemoryStorage, ensureDir, MB };
