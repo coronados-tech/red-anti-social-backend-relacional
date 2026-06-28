@@ -96,10 +96,20 @@ const tagsRouter = resolveHandler(require(path.join(__dirname, "../src/routes/ta
 
 const app = express();
 
-const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173,http://localhost:5174")
+const defaultCorsOrigins =
+  "http://localhost:5173,http://localhost:5174,https://red-anti-social.vercel.app";
+
+const corsOrigins = (process.env.CORS_ORIGIN || defaultCorsOrigins)
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
+
+function isAllowedCorsOrigin(origin) {
+  if (!origin) return true;
+  if (corsOrigins.includes(origin)) return true;
+  if (runningOnVercel && /^https:\/\/[\w.-]+\.vercel\.app$/.test(origin)) return true;
+  return false;
+}
 
 const enableSwagger = process.env.NODE_ENV !== "production" || process.env.ENABLE_SWAGGER === "true";
 
@@ -111,7 +121,13 @@ app.get("/health", (_req, res) => {
   });
 });
 
-app.use(cors({ origin: corsOrigins }));
+app.use(
+  cors({
+    origin(origin, callback) {
+      callback(null, isAllowedCorsOrigin(origin));
+    },
+  }),
+);
 app.use((req, res, next) => i18n.init(req, res, next));
 app.use(express.json());
 app.use(databaseMiddleware);
