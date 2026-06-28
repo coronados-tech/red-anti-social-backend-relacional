@@ -30,16 +30,6 @@ const resolveHandler = (mod) => {
   return mod;
 };
 
-const lazyRouter = (modulePath) => {
-  let router;
-  return (req, res, next) => {
-    if (!router) {
-      router = resolveHandler(require(modulePath));
-    }
-    return router(req, res, next);
-  };
-};
-
 const locale = process.env.IDIOMA === "es" ? process.env.IDIOMA : "es";
 
 let dbReady = false;
@@ -56,8 +46,8 @@ async function ensureDatabase() {
 
   if (!dbInitPromise) {
     dbInitPromise = (async () => {
-      const { sequelize } = require("../src/db/models");
-      const { runMigrations } = require("../src/db/migrate");
+      const { sequelize } = require(path.join(__dirname, "../src/db/models"));
+      const { runMigrations } = require(path.join(__dirname, "../src/db/migrate"));
 
       await sequelize.authenticate();
 
@@ -91,9 +81,18 @@ i18n.configure({
 });
 
 const filterPostCommentsMiddleware = resolveHandler(
-  require("../src/middlewares/filterPostComments.middleware"),
+  require(path.join(__dirname, "../src/middlewares/filterPostComments.middleware")),
 );
-const errorMiddleware = resolveHandler(require("../src/middlewares/error.middleware"));
+const errorMiddleware = resolveHandler(
+  require(path.join(__dirname, "../src/middlewares/error.middleware")),
+);
+
+const authRouter = resolveHandler(require(path.join(__dirname, "../src/routes/auth.routes")));
+const commentsRouter = resolveHandler(require(path.join(__dirname, "../src/routes/comments.route")));
+const usersRouter = resolveHandler(require(path.join(__dirname, "../src/routes/user.routes")));
+const postsRouter = resolveHandler(require(path.join(__dirname, "../src/routes/post.routes")));
+const postImagesRouter = resolveHandler(require(path.join(__dirname, "../src/routes/postimage.routes")));
+const tagsRouter = resolveHandler(require(path.join(__dirname, "../src/routes/tag.routes")));
 
 const app = express();
 
@@ -124,18 +123,18 @@ if (enableSwagger) {
   app.use("/swagger", ...swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 }
 
-app.use("/auth", lazyRouter("../src/routes/auth.routes"));
-app.use("/comments", lazyRouter("../src/routes/comments.route"));
-app.use("/users", lazyRouter("../src/routes/user.routes"));
-app.use("/posts", filterPostCommentsMiddleware, lazyRouter("../src/routes/post.routes"));
-app.use("/tags", lazyRouter("../src/routes/tag.routes"));
+app.use("/auth", authRouter);
+app.use("/comments", commentsRouter);
+app.use("/users", usersRouter);
+app.use("/posts", filterPostCommentsMiddleware, postsRouter);
+app.use("/tags", tagsRouter);
 
 const uploadsRoot = runningOnVercel
   ? path.join("/tmp", "uploads")
   : path.join(__dirname, "../uploads");
 
 app.use("/uploads", express.static(uploadsRoot));
-app.use("/post-images", lazyRouter("../src/routes/postimage.routes"));
+app.use("/post-images", postImagesRouter);
 app.use(errorMiddleware);
 
 module.exports = app;

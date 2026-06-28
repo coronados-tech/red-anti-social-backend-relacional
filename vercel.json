@@ -1,7 +1,7 @@
 {
   "functions": {
     "src/index.js": {
-      "includeFiles": "node_modules/{pg,pg-hstore}/**"
+      "includeFiles": "{src/**,docs/**,api/**,node_modules/{pg,pg-hstore}/**}"
     }
   }
 }
