@@ -2,9 +2,9 @@ const path = require("path");
 const { mapUploadError } = require("../helpers/uploadError.helper");
 const { createStorage, MB } = require("../services/storage.service");
 
-const uploadsRoot = process.env.VERCEL
-    ? path.join("/tmp", "uploads")
-    : path.join(__dirname, "../../uploads");
+const { getRuntimeUploadsRoot } = require("../helpers/fileHelper");
+
+const uploadsRoot = getRuntimeUploadsRoot();
 const POST_IMAGE_UPLOAD_DIR = path.join(uploadsRoot, "posts");
 const PROFILE_PICTURE_UPLOAD_DIR = path.join(uploadsRoot, "profiles");
 const IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp"];
