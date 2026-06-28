@@ -114,10 +114,14 @@ function isAllowedCorsOrigin(origin) {
 const enableSwagger = process.env.NODE_ENV !== "production" || process.env.ENABLE_SWAGGER === "true";
 
 app.get("/health", (_req, res) => {
+  const blobStorage = require(path.join(__dirname, "../src/services/blobStorage.service"));
   res.json({
     ok: true,
     hasDatabaseUrl: hasDatabaseUrl(),
     onVercel: runningOnVercel,
+    hasBlobToken: blobStorage.isEnabled(),
+    profilePictureStorage: blobStorage.getStorageMode(),
+    postImageStorage: blobStorage.getStorageMode(),
   });
 });
 

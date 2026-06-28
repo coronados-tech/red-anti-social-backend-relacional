@@ -182,11 +182,34 @@ const ensurePostSlugUniqueIndex = async () => {
   }
 };
 
+const widenProfilePictureColumn = async () => {
+  const dialect = sequelize.getDialect();
+  if (dialect !== "postgres") return;
+
+  await sequelize.query(`
+    ALTER TABLE "Users"
+    ALTER COLUMN "profilePicture" TYPE TEXT
+  `);
+};
+
+const widenPostImageUrlColumn = async () => {
+  const dialect = sequelize.getDialect();
+  if (dialect !== "postgres") return;
+
+  await sequelize.query(`
+    ALTER TABLE "PostImages"
+    ALTER COLUMN url TYPE TEXT
+  `);
+};
+
 const runMigrations = async () => {
   await addColumnIfMissing("Users", "profilePicture", {
     type: Sequelize.STRING,
     allowNull: true,
   });
+
+  await widenProfilePictureColumn();
+  await widenPostImageUrlColumn();
 
   await addColumnIfMissing("Posts", "titulo", {
     type: Sequelize.STRING(200),

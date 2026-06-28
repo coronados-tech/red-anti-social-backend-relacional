@@ -1,5 +1,5 @@
 const { PostImage, Post } = require("../db/models");
-const { deleteFileFromUrl } = require("../helpers/fileHelper");
+const blobStorage = require("./blobStorage.service");
 const postCache = require("./postCache.service");
 
 const findPost = (postId) => Post.findByPk(postId);
@@ -54,7 +54,7 @@ const update = async (id, { postId, url, newPostId }) => {
     }
 
     if (url) {
-        deleteFileFromUrl(postImage.url);
+        await blobStorage.deleteIfStored(postImage.url);
     }
 
     const previousPostId = postImage.post_id;
@@ -75,7 +75,7 @@ const update = async (id, { postId, url, newPostId }) => {
 const removeAllByPostId = async (postId) => {
     const images = await PostImage.findAll({ where: { post_id: postId } });
     for (const image of images) {
-        deleteFileFromUrl(image.url);
+        await blobStorage.deleteIfStored(image.url);
         await image.destroy();
     }
 };
@@ -86,7 +86,7 @@ const remove = async (id, { postId } = {}) => {
 
     const { post_id } = scoped.postImage;
 
-    deleteFileFromUrl(scoped.postImage.url);
+    await blobStorage.deleteIfStored(scoped.postImage.url);
     await scoped.postImage.destroy();
     postCache.deletePost(post_id);
 

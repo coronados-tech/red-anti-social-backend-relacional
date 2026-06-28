@@ -72,7 +72,7 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
       gender: { type: DataTypes.STRING, allowNull: false },
-      profilePicture: { type: DataTypes.STRING, allowNull: true },
+      profilePicture: { type: DataTypes.TEXT, allowNull: true },
       isProfilePublic: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

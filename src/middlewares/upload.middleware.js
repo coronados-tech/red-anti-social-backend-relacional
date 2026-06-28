@@ -10,13 +10,18 @@ const PROFILE_PICTURE_UPLOAD_DIR = path.join(uploadsRoot, "profiles");
 const IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp"];
 const IMAGE_MAX_SIZE = 5 * MB;
 
-const postImageStorage = createStorage({
-  destination: POST_IMAGE_UPLOAD_DIR,
-  allowedMimeTypes: IMAGE_MIMES,
-  maxFileSize: IMAGE_MAX_SIZE,
-});
+const postImageStorage = blobStorage.shouldUseMemoryUpload()
+  ? createMemoryStorage({
+      allowedMimeTypes: IMAGE_MIMES,
+      maxFileSize: IMAGE_MAX_SIZE,
+    })
+  : createStorage({
+      destination: POST_IMAGE_UPLOAD_DIR,
+      allowedMimeTypes: IMAGE_MIMES,
+      maxFileSize: IMAGE_MAX_SIZE,
+    });
 
-const profilePictureStorage = blobStorage.isEnabled()
+const profilePictureStorage = blobStorage.shouldUseMemoryUpload()
   ? createMemoryStorage({
       allowedMimeTypes: IMAGE_MIMES,
       maxFileSize: IMAGE_MAX_SIZE,

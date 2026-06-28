@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     }
     PostImage.init(
         {
-            url: { type: DataTypes.STRING, allowNull: false },
+            url: { type: DataTypes.TEXT, allowNull: false },
             createdAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
             updatedAt: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
         },

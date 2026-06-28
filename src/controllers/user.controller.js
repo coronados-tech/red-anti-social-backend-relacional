@@ -1,6 +1,5 @@
 const HTTP = require("../config/HttpCode");
 const { User } = require("../db/models");
-const { buildPublicUrl } = require("../helpers/fileHelper");
 const blobStorage = require("../services/blobStorage.service");
 const followerService = require("../services/follower.service");
 const userService = require("../services/user.service");
@@ -60,9 +59,7 @@ const uploadUserProfilePicture = async (req, res) => {
         await blobStorage.deleteIfStored(user.profilePicture);
     }
 
-    const url = blobStorage.isEnabled()
-        ? await blobStorage.saveProfileImage(req.file)
-        : buildPublicUrl(req, req.file.filename, "profiles");
+    const url = await blobStorage.saveProfileImagePersisted(req.file, req);
 
     await user.update({ profilePicture: url });
 

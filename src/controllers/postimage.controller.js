@@ -1,5 +1,5 @@
 const HTTP = require("../config/HttpCode");
-const { buildPublicUrl } = require("../helpers/fileHelper");
+const blobStorage = require("../services/blobStorage.service");
 const postImageService = require("../services/postimage.service");
 const postService = require("../services/post.service");
 
@@ -47,7 +47,7 @@ const createPostImage = async (req, res) => {
         });
     }
 
-    const url = buildPublicUrl(req, req.file.filename);
+    const url = await blobStorage.savePostImagePersisted(req.file, req);
     const postId = resolvePostId(req);
     const postImage = await postImageService.create({ postId, url });
 
@@ -84,7 +84,7 @@ const getPostImagesByPost = async (req, res) => {
 const updatePostImage = async (req, res) => {
     const imageId = resolveImageId(req);
     const postId = resolvePostId(req);
-    const url = req.file ? buildPublicUrl(req, req.file.filename) : undefined;
+    const url = req.file ? await blobStorage.savePostImagePersisted(req.file, req) : undefined;
     const result = await postImageService.update(imageId, {
         postId,
         url,
