@@ -14,16 +14,28 @@ const { deleteFileFromUrl } = require("../helpers/fileHelper");
 const DEMO_PASSWORD = "123456";
 const PROFILE_PICTURE_DIR = path.join(__dirname, "../../uploads/profiles");
 const POST_IMAGE_DIR = path.join(__dirname, "../../uploads/posts");
-const MEMES_DIR = path.join(
-  __dirname,
-  "../../../red-anti-social/src/assets/memes",
-);
 const FRONTEND_ASSETS = path.join(
   __dirname,
   "../../../red-anti-social/src/assets/profile.images",
 );
 const PUBLIC_BASE_URL =
   process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 3001}`;
+
+const resolveAssetPath = (...segments) => {
+  const candidates = [
+    path.join(__dirname, "../../../red-anti-social/src/assets", ...segments),
+    path.join(process.cwd(), "../red-anti-social/src/assets", ...segments),
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
+  return candidates[0];
+};
+
+const MEMES_DIR = resolveAssetPath("memes");
+const PROFILE_IMAGES_DIR = resolveAssetPath("profile.images");
 
 const INTEGRANTES = [
   {
@@ -35,7 +47,7 @@ const INTEGRANTES = [
     birthDate: "1988-10-31",
     gender: "femenino",
     isProfilePublic: true,
-    profileImage: "carla.png",
+    profileImage: "carla.jpg",
   },
   {
     key: "celeste_fernandez",
@@ -68,7 +80,7 @@ const INTEGRANTES = [
     birthDate: "1990-04-29",
     gender: "masculino",
     isProfilePublic: true,
-    profileImage: "rafael.png",
+    profileImage: "rafael.jpg",
   },
 ];
 
@@ -252,7 +264,7 @@ function buildProfileUrl(filename) {
 }
 
 async function setProfilePicture(user, profileImage) {
-  const sourcePath = path.join(FRONTEND_ASSETS, profileImage);
+  const sourcePath = path.join(PROFILE_IMAGES_DIR, profileImage);
 
   if (!fs.existsSync(sourcePath)) {
     console.warn(`Imagen no encontrada para @${user.nickname}: ${sourcePath}`);
@@ -289,24 +301,29 @@ async function loadIntegrantes() {
 }
 
 async function applyDemoPosts(usersByKey) {
+  const postIdMap = {};
+
   for (const postData of DEMO_POSTS) {
-    const { id, userKey, createdAt, titulo, description, tags } = postData;
+    const { id: demoId, userKey, createdAt, titulo, description, tags } = postData;
     const user = usersByKey[userKey];
 
     if (!user) {
-      console.warn(`Usuario no encontrado para post ${id}: ${userKey}`);
+      console.warn(`Usuario no encontrado para post ${demoId}: ${userKey}`);
       continue;
     }
 
-    const existing = await Post.findByPk(id);
+    let post = await Post.findOne({
+      where: { titulo, user_id: user.id },
+    });
 
-    if (existing) {
+    if (post) {
+      await postService.update(post.id, { titulo, description, tags });
       await Post.update(
-        { user_id: user.id, createdAt, updatedAt: createdAt },
-        { where: { id }, silent: true },
+        { createdAt, updatedAt: createdAt },
+        { where: { id: post.id }, silent: true },
       );
-      await postService.update(id, { titulo, description, tags });
-      console.log(`Post ${id} actualizado → @${user.nickname} (${createdAt.slice(0, 10)})`);
+      postIdMap[demoId] = post.id;
+      console.log(`Post ${post.id} actualizado → @${user.nickname} (${createdAt.slice(0, 10)})`);
       continue;
     }
 
@@ -321,10 +338,13 @@ async function applyDemoPosts(usersByKey) {
       { createdAt, updatedAt: createdAt },
       { where: { id: created.id }, silent: true },
     );
+
+    postIdMap[demoId] = created.id;
     console.log(`Post ${created.id} creado → @${user.nickname}`);
   }
 
   postCache.deleteAll();
+  return postIdMap;
 }
 
 function buildPostImageUrl(filename) {
@@ -370,9 +390,14 @@ async function attachMemesToPost(postId, memeFiles) {
   }
 }
 
-async function applyDemoMemes() {
-  for (const { postId, memeFiles } of POST_MEMES) {
-    await attachMemesToPost(postId, memeFiles);
+async function applyDemoMemes(postIdMap) {
+  for (const { postId: demoPostId, memeFiles } of POST_MEMES) {
+    const actualPostId = postIdMap[demoPostId];
+    if (!actualPostId) {
+      console.warn(`Post demo ${demoPostId} no mapeado, se omiten memes`);
+      continue;
+    }
+    await attachMemesToPost(actualPostId, memeFiles);
   }
 
   postCache.deleteAll();
@@ -401,21 +426,41 @@ async function getIntegrantesByKey() {
   return usersByKey;
 }
 
-async function applyDemoComments(usersByKey) {
-  const postDates = Object.fromEntries(DEMO_POSTS.map((post) => [post.id, post.createdAt]));
-  const postIds = DEMO_POSTS.map((post) => post.id);
+async function buildPostIdMapFromDemo(usersByKey) {
+  const postIdMap = {};
 
-  await Comment.destroy({ where: { post_id: postIds } });
+  for (const { id: demoId, userKey, titulo } of DEMO_POSTS) {
+    const user = usersByKey[userKey];
+    if (!user) continue;
+
+    const post = await Post.findOne({
+      where: { titulo, user_id: user.id },
+    });
+
+    if (post) postIdMap[demoId] = post.id;
+  }
+
+  return postIdMap;
+}
+
+async function applyDemoComments(usersByKey, postIdMap) {
+  const postDates = Object.fromEntries(DEMO_POSTS.map((post) => [post.id, post.createdAt]));
+  const actualPostIds = Object.values(postIdMap);
+
+  if (actualPostIds.length > 0) {
+    await Comment.destroy({ where: { post_id: actualPostIds } });
+  }
 
   let commentOffset = 0;
 
   for (const commentData of DEMO_COMMENTS) {
-    const { postId, userKey, content } = commentData;
+    const { postId: demoPostId, userKey, content } = commentData;
     const user = usersByKey[userKey];
-    const postDate = postDates[postId];
+    const postDate = postDates[demoPostId];
+    const actualPostId = postIdMap[demoPostId];
 
-    if (!user || !postDate) {
-      console.warn(`No se pudo crear comentario en post ${postId}`);
+    if (!user || !postDate || !actualPostId) {
+      console.warn(`No se pudo crear comentario en post demo ${demoPostId}`);
       continue;
     }
 
@@ -425,7 +470,7 @@ async function applyDemoComments(usersByKey) {
     const comment = await commentService.create({
       content,
       user_id: user.id,
-      post_id: postId,
+      post_id: actualPostId,
     });
 
     await Comment.update(
@@ -433,7 +478,7 @@ async function applyDemoComments(usersByKey) {
       { where: { id: comment.id }, silent: true },
     );
 
-    console.log(`Comentario → post ${postId} (@${user.nickname})`);
+    console.log(`Comentario → post ${actualPostId} (@${user.nickname})`);
   }
 
   postCache.deleteAll();
@@ -441,9 +486,9 @@ async function applyDemoComments(usersByKey) {
 
 async function seedDemo() {
   const usersByKey = await loadIntegrantes();
-  await applyDemoPosts(usersByKey);
-  await applyDemoMemes();
-  await applyDemoComments(usersByKey);
+  const postIdMap = await applyDemoPosts(usersByKey);
+  await applyDemoMemes(postIdMap);
+  await applyDemoComments(usersByKey, postIdMap);
 
   console.log("\nSeed completado.");
   console.log("Contraseña demo para todos los integrantes:", DEMO_PASSWORD);
@@ -473,13 +518,16 @@ async function seedPostsOnly() {
 }
 
 async function seedMemesOnly() {
-  await applyDemoMemes();
+  const usersByKey = await getIntegrantesByKey();
+  const postIdMap = await buildPostIdMapFromDemo(usersByKey);
+  await applyDemoMemes(postIdMap);
   console.log("\nMemes agregados a los posts.");
 }
 
 async function seedCommentsOnly() {
   const usersByKey = await getIntegrantesByKey();
-  await applyDemoComments(usersByKey);
+  const postIdMap = await buildPostIdMapFromDemo(usersByKey);
+  await applyDemoComments(usersByKey, postIdMap);
   console.log("\nComentarios demo agregados.");
 }
 
