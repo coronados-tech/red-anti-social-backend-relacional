@@ -1,4 +1,37 @@
-const { User } = require("../db/models");
+const { Op } = require("sequelize");
+const { User, sequelize } = require("../db/models");
+
+const caseInsensitiveMatch = (column, value) =>
+  sequelize.where(
+    sequelize.fn("LOWER", sequelize.col(column)),
+    value.trim().toLowerCase(),
+  );
+
+const findByNickname = (nickname, excludeUserId = null) => {
+  const conditions = [caseInsensitiveMatch("nickname", nickname)];
+  if (excludeUserId != null) {
+    conditions.push({ id: { [Op.ne]: excludeUserId } });
+  }
+  return User.findOne({ where: { [Op.and]: conditions } });
+};
+
+const findByEmail = (email, excludeUserId = null) => {
+  const conditions = [caseInsensitiveMatch("email", email)];
+  if (excludeUserId != null) {
+    conditions.push({ id: { [Op.ne]: excludeUserId } });
+  }
+  return User.findOne({ where: { [Op.and]: conditions } });
+};
+
+const findByIdentifier = (identifier) =>
+  User.findOne({
+    where: {
+      [Op.or]: [
+        caseInsensitiveMatch("nickname", identifier),
+        caseInsensitiveMatch("email", identifier),
+      ],
+    },
+  });
 
 const canViewFullProfile = async (user, viewerId) => {
   if (!user) return false;
@@ -48,4 +81,7 @@ module.exports = {
   canViewFullProfile,
   findByIdForViewer,
   findAllForViewer,
+  findByNickname,
+  findByEmail,
+  findByIdentifier,
 };

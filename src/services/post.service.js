@@ -11,7 +11,18 @@ const postIncludes = [
   },
   { model: PostImage, as: "postImages" },
   { model: Tag, as: "tags", attributes: ["id", "name"] },
-  { model: Comment, as: "comments", attributes: ["id", "content"] },
+  {
+    model: Comment,
+    as: "comments",
+    attributes: ["id", "content", "createdAt", "user_id"],
+    include: [
+      {
+        model: User,
+        as: "user",
+        attributes: ["id", "nickname", "name", "lastName", "profilePicture"],
+      },
+    ],
+  },
 ];
 
 const serializePost = (post) => {
@@ -60,7 +71,11 @@ const findAll = async ({ user_id, viewer_id } = {}) => {
 
   if (!posts) {
     const where = user_id !== undefined ? { user_id } : {};
-    const dbPosts = await Post.findAll({ where, include: postIncludes });
+    const dbPosts = await Post.findAll({
+      where,
+      include: postIncludes,
+      order: [["createdAt", "DESC"]],
+    });
     posts = dbPosts.map(serializePost);
     postCache.set(cacheKey, posts);
   }

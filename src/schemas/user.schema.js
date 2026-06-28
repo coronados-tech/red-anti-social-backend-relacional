@@ -65,13 +65,38 @@ const password = Joi.string()
         "any.required": "La contraseña es obligatoria",
     });
 
-const birthDate = Joi.date().iso().less("now").required().messages({
-    "date.base": "La fecha de nacimiento debe ser una fecha válida (formato: YYYY-MM-DD, ej: 1988-11-07)",
-    "date.format": "La fecha de nacimiento debe tener formato YYYY-MM-DD (ej: 1988-11-07)",
-    "date.less": "La fecha de nacimiento debe ser anterior a hoy",
-    "any.required": "La fecha de nacimiento es obligatoria",
-    "date.empty": "La fecha de nacimiento no puede estar vacía",
-});
+const MIN_AGE = 16;
+const MAX_AGE = 100;
+
+function getMaxBirthDate(minAgeYears) {
+    const date = new Date();
+    date.setHours(23, 59, 59, 999);
+    date.setFullYear(date.getFullYear() - minAgeYears);
+    return date;
+}
+
+function getMinBirthDate(maxAgeYears) {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    date.setFullYear(date.getFullYear() - maxAgeYears);
+    return date;
+}
+
+const birthDate = Joi.date()
+    .iso()
+    .less("now")
+    .max(getMaxBirthDate(MIN_AGE))
+    .min(getMinBirthDate(MAX_AGE))
+    .required()
+    .messages({
+        "date.base": "La fecha de nacimiento debe ser una fecha válida (formato: YYYY-MM-DD, ej: 1988-11-07)",
+        "date.format": "La fecha de nacimiento debe tener formato YYYY-MM-DD (ej: 1988-11-07)",
+        "date.less": "La fecha de nacimiento debe ser anterior a hoy",
+        "date.max": "Debés tener al menos 16 años para registrarte",
+        "date.min": "La edad no puede ser mayor a 100 años",
+        "any.required": "La fecha de nacimiento es obligatoria",
+        "date.empty": "La fecha de nacimiento no puede estar vacía",
+    });
 
 const gender = Joi.string()
     .valid("femenino", "Femenino", "masculino", "Masculino", "otro", "Otro")

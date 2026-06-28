@@ -21,6 +21,7 @@ const querySchemaValidatorMiddleware =
 const existValidateMiddleware = require("../middlewares/validations/exist.middleware");
 const numericParamValidateMiddleware = require("../middlewares/validations/numeric.middleware");
 const alreadyFollowingMiddleware = require("../middlewares/validations/alreadyFollowing.middleware");
+const duplicateUserMiddleware = require("../middlewares/validations/duplicateUser.middleware");
 const { uploadProfilePicture } = require("../middlewares/upload.middleware");
 const {
   optionalAuthMiddleware,
@@ -37,7 +38,12 @@ const profileViewerMiddleware = [
 
 router.get("/", ...profileViewerMiddleware, getAllUsers);
 
-router.post("/", schemaValidatorMiddleware(userSchema), createUser);
+router.post(
+  "/",
+  schemaValidatorMiddleware(userSchema),
+  duplicateUserMiddleware(),
+  createUser,
+);
 
 router.get(
   "/:id/followers",
@@ -100,6 +106,7 @@ router.put(
   numericParamValidateMiddleware("id"),
   existValidateMiddleware(User, "id"),
   schemaValidatorMiddleware(updateUserSchema),
+  duplicateUserMiddleware({ excludeParam: "id" }),
   updateUser,
 );
 

@@ -94,11 +94,23 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "User",
       hooks: {
         beforeCreate: async (user) => {
+          if (user.email) {
+            user.email = user.email.trim().toLowerCase();
+          }
+          if (user.nickname) {
+            user.nickname = user.nickname.trim();
+          }
           if (user.password) {
             user.password = await hashPassword(user.password);
           }
         },
         beforeUpdate: async (user) => {
+          if (user.changed("email") && user.email) {
+            user.email = user.email.trim().toLowerCase();
+          }
+          if (user.changed("nickname") && user.nickname) {
+            user.nickname = user.nickname.trim();
+          }
           if (user.changed("password")) {
             user.password = await hashPassword(user.password);
           }
