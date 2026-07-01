@@ -9,6 +9,8 @@ const {
   getPostBySlug,
   updatePost,
   deletePost,
+  likePost,
+  unlikePost,
 } = require("../controllers/post.controller");
 
 const {
@@ -25,6 +27,8 @@ const existValidateMiddleware = require("../middlewares/validations/exist.middle
 const numericParamValidateMiddleware = require("../middlewares/validations/numeric.middleware");
 
 const { uploadSingleImage } = require("../middlewares/upload.middleware");
+const { requireAuthMiddleware } = require("../middlewares/auth.middleware");
+const alreadyLikedMiddleware = require("../middlewares/validations/alreadyLiked.middleware");
 const {
   postSchema,
   updatePostSchema,
@@ -112,6 +116,23 @@ router.delete(
   numericParamValidateMiddleware("id"),
   existValidateMiddleware(Post, "id"),
   deletePost
+);
+
+router.post(
+  "/:id/like",
+  requireAuthMiddleware,
+  numericParamValidateMiddleware("id"),
+  existValidateMiddleware(Post, "id"),
+  alreadyLikedMiddleware,
+  likePost,
+);
+
+router.delete(
+  "/:id/like",
+  requireAuthMiddleware,
+  numericParamValidateMiddleware("id"),
+  existValidateMiddleware(Post, "id"),
+  unlikePost,
 );
 
 module.exports = router;

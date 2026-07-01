@@ -20,6 +20,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "follower_id",
         otherKey: "following_id",
       });
+      User.belongsToMany(models.Post, {
+        through: models.Like,
+        as: "likedPosts",
+        foreignKey: "user_id",
+        otherKey: "post_id",
+      });
     }
 
     toJSON() {

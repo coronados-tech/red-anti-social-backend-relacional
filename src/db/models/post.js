@@ -20,6 +20,12 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: "tag_id",
         as: "tags",
       });
+      Post.belongsToMany(models.User, {
+        through: models.Like,
+        as: "likers",
+        foreignKey: "post_id",
+        otherKey: "user_id",
+      });
     }
   }
   Post.init(

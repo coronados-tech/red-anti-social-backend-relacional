@@ -14,7 +14,6 @@ info:
         | MESES | Antigüedad máxima en meses para comentarios en publicaciones (por defecto 6) |
         | CACHE_POSTS_ENABLED | Caché en memoria para GET de posts (por defecto true) |
         | CACHE_POSTS_TTL_SECONDS | TTL del caché en segundos (por defecto 60) |
-        | POSTS_PAGINATION_DELAY_MS | Demora artificial en GET /posts paginado, en ms (por defecto 1500; 0 desactiva) |
         | DB_DIALECT | sqlite, mysql, mariadb o postgres |
         | ENABLE_SWAGGER | Swagger UI en `/swagger` (por defecto habilitado; `false` desactiva) |
     version: 1.0.0

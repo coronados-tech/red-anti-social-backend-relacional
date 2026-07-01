@@ -1,5 +1,6 @@
 const HTTP = require("../config/HttpCode");
 const postService = require("../services/post.service");
+const likeService = require("../services/like.service");
 
 const respondPostForbidden = (res) =>
     res.status(HTTP.FORBIDDEN).json({
@@ -34,7 +35,8 @@ const getAllPosts = async (req, res) => {
 
 const getPostById = async (req, res) => {
     const { id } = req.params;
-    const post = await postService.findById(id);
+    const { viewer_id } = req.query;
+    const post = await postService.findById(id, viewer_id);
 
     if (!post) {
         return res.status(HTTP.NOT_FOUND).json({
@@ -47,7 +49,8 @@ const getPostById = async (req, res) => {
 
 const getPostBySlug = async (req, res) => {
     const { slug } = req.params;
-    const post = await postService.findBySlug(slug);
+    const { viewer_id } = req.query;
+    const post = await postService.findBySlug(slug, viewer_id);
 
     if (!post) {
         return res.status(HTTP.NOT_FOUND).json({
@@ -74,6 +77,38 @@ const deletePost = async (req, res) => {
     });
 };
 
+const likePost = async (req, res) => {
+    const { id } = req.params;
+    const result = await likeService.like(id, req.user.id);
+
+    if (!result) {
+        return res.status(HTTP.NOT_FOUND).json({
+            message: res.__("id_dont_exist", { id, nombreModelo: "Post" }),
+        });
+    }
+
+    res.status(HTTP.OK).json({
+        message: res.__("like_success"),
+        ...result,
+    });
+};
+
+const unlikePost = async (req, res) => {
+    const { id } = req.params;
+    const result = await likeService.unlike(id, req.user.id);
+
+    if (!result) {
+        return res.status(HTTP.NOT_FOUND).json({
+            message: res.__("id_dont_exist", { id, nombreModelo: "Post" }),
+        });
+    }
+
+    res.status(HTTP.OK).json({
+        message: res.__("unlike_success"),
+        ...result,
+    });
+};
+
 module.exports = {
     createPost,
     getAllPosts,
@@ -81,4 +116,6 @@ module.exports = {
     getPostBySlug,
     updatePost,
     deletePost,
+    likePost,
+    unlikePost,
 };

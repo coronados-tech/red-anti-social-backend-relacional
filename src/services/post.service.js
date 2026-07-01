@@ -1,4 +1,5 @@
-const { Post, User, PostImage, Comment, Tag } = require("../db/models");
+const { Post, User, PostImage, Comment, Tag, Like, sequelize } = require("../db/models");
+const { Op } = require("sequelize");
 const { removeAllByPostId } = require("./postimage.service");
 const postCache = require("./postCache.service");
 const { canViewFullProfile } = require("./user.service");
@@ -44,6 +45,42 @@ const serializePost = (post) => {
   return json;
 };
 
+const enrichPostsWithLikes = async (posts, viewer_id) => {
+  if (!posts.length) return posts;
+
+  const postIds = posts.map((post) => post.id);
+  const counts = await Like.findAll({
+    attributes: [
+      "post_id",
+      [sequelize.fn("COUNT", sequelize.col("user_id")), "likeCount"],
+    ],
+    where: { post_id: { [Op.in]: postIds } },
+    group: ["post_id"],
+    raw: true,
+  });
+
+  const countMap = Object.fromEntries(
+    counts.map((entry) => [entry.post_id, Number(entry.likeCount)]),
+  );
+
+  let viewerLikeSet = new Set();
+  if (viewer_id !== undefined) {
+    const viewerLikes = await Like.findAll({
+      where: { post_id: { [Op.in]: postIds }, user_id: viewer_id },
+      attributes: ["post_id"],
+      raw: true,
+    });
+    viewerLikeSet = new Set(viewerLikes.map((entry) => entry.post_id));
+  }
+
+  return posts.map((post) => ({
+    ...post,
+    likeCount: countMap[post.id] ?? 0,
+    likedByViewer:
+      viewer_id !== undefined ? viewerLikeSet.has(post.id) : false,
+  }));
+};
+
 const listCacheKey = (user_id) =>
   user_id !== undefined ? `posts:user:${user_id}` : "posts:all";
 
@@ -74,16 +111,6 @@ const resolveTags = async (tagNames = []) => {
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 
-const paginationDelayMs = Math.max(
-  0,
-  Number(process.env.POSTS_PAGINATION_DELAY_MS ?? 1500),
-);
-
-const waitForPaginationDelay = () =>
-  paginationDelayMs > 0
-    ? new Promise((resolve) => setTimeout(resolve, paginationDelayMs))
-    : Promise.resolve();
-
 const findPaginated = async ({
   user_id,
   viewer_id,
@@ -100,21 +127,18 @@ const findPaginated = async ({
   const where = user_id !== undefined ? { user_id } : {};
   const offset = (page - 1) * limit;
 
-  const [[total, rows]] = await Promise.all([
-    Promise.all([
-      Post.count({ where }),
-      Post.findAll({
-        where,
-        include: postIncludes,
-        order: [["createdAt", "DESC"]],
-        limit,
-        offset,
-      }),
-    ]),
-    waitForPaginationDelay(),
+  const [total, rows] = await Promise.all([
+    Post.count({ where }),
+    Post.findAll({
+      where,
+      include: postIncludes,
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    }),
   ]);
 
-  const items = rows.map(serializePost);
+  const items = await enrichPostsWithLikes(rows.map(serializePost), viewer_id);
 
   return {
     items,
@@ -145,13 +169,13 @@ const findAll = async ({ user_id, viewer_id } = {}) => {
     if (!(await canViewFullProfile(owner, viewer_id))) {
       return { forbidden: true };
     }
-    return posts;
+    return enrichPostsWithLikes(posts, viewer_id);
   }
 
-  return posts;
+  return enrichPostsWithLikes(posts, viewer_id);
 };
 
-const findById = async (id) => {
+const findById = async (id, viewer_id) => {
   const cacheKey = `post:${id}`;
   let post = postCache.get(cacheKey);
 
@@ -165,10 +189,11 @@ const findById = async (id) => {
     }
   }
 
-  return post;
+  const [enrichedPost] = await enrichPostsWithLikes([post], viewer_id);
+  return enrichedPost;
 };
 
-const findBySlug = async (slug) => {
+const findBySlug = async (slug, viewer_id) => {
   const cacheKey = `post:slug:${slug}`;
   let post = postCache.get(cacheKey);
 
@@ -183,7 +208,8 @@ const findBySlug = async (slug) => {
     postCache.set(`post:${post.id}`, post);
   }
 
-  return post;
+  const [enrichedPost] = await enrichPostsWithLikes([post], viewer_id);
+  return enrichedPost;
 };
 
 const create = async ({ titulo, description, user_id, tags }) => {

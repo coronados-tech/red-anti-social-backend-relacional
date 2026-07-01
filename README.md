@@ -80,3 +80,78 @@ Por otro lado les dejamos la documentación de los endpoint para que también la
 1. Hace el upload de las imágenes que se asocian a un POST que lo guarden en una carpeta de imágenes dentro del servidor web.
 2. ¿Cómo modelarías que un usuario pueda "seguir" a otros usuarios, y a su vez ser seguido por muchos? Followers
 3. Como la información de los post no varía muy seguido ¿Qué estrategias podrían utilizar para que la información no sea constantemente consultada desde la base de datos?
+
+---
+
+## Estado del proyecto (implementado)
+
+**Producción**
+
+| Recurso | URL |
+| ------- | --- |
+| API | [red-anti-social-backend-relacional.vercel.app](https://red-anti-social-backend-relacional.vercel.app) |
+| Swagger | […/swagger](https://red-anti-social-backend-relacional.vercel.app/swagger) |
+| Frontend | [red-anti-social.vercel.app](https://red-anti-social.vercel.app) |
+
+### Funcionalidades extra (MVP + bonus)
+
+| Área | Detalle |
+| ---- | ------- |
+| **Autenticación** | JWT (`POST /auth/login`, `GET /auth/me`). Rutas de follow y like requieren token. |
+| **Seguidores** | Tabla `Followers` (PK compuesta). `POST/DELETE /users/:id/follow`. |
+| **Me gusta** | Tabla `Likes` (PK compuesta `user_id` + `post_id`). `POST/DELETE /posts/:id/like`. Los posts devuelven `likeCount` y `likedByViewer`. |
+| **Perfiles** | Campo `isProfilePublic`. Perfiles privados ocultos a no-seguidores. |
+| **Posts** | Título, slug único, tags many-to-many, imágenes, paginación (`?page=&limit=`). |
+| **Comentarios** | Filtro por antigüedad configurable (`MESES` en env). |
+| **Caché** | Caché en memoria de posts (`CACHE_POSTS_*`). Se invalida al crear/editar/borrar posts o likes. |
+| **Storage** | Imágenes en carpeta local, Vercel Blob o data URL según entorno. |
+| **Base de datos** | SQLite (local), PostgreSQL/Neon (Vercel). Migraciones en `src/db/migrate.js`. |
+| **Deploy** | Serverless en Vercel (`api/app.js`). |
+
+### Endpoints de me gusta
+
+```http
+POST   /posts/:id/like     # Requiere Authorization: Bearer <token>
+DELETE /posts/:id/like     # Requiere Authorization: Bearer <token>
+```
+
+Respuesta ejemplo:
+
+```json
+{
+  "message": "Like agregado correctamente",
+  "post_id": 1,
+  "likeCount": 3,
+  "likedByViewer": true
+}
+```
+
+### Variables de entorno relevantes
+
+Ver `.env.Example` para la lista completa. Destacadas:
+
+- `DATABASE_URL` — PostgreSQL en producción (Vercel/Neon)
+- `JWT_SECRET` — firma de tokens
+- `CORS_ORIGIN` — orígenes del frontend
+- `MESES` — antigüedad máxima de comentarios visibles
+- `CACHE_POSTS_ENABLED` / `CACHE_POSTS_TTL_SECONDS` — caché de posts
+- `BLOB_READ_WRITE_TOKEN` — almacenamiento de imágenes en Vercel Blob
+
+### Desarrollo local
+
+```bash
+npm install
+cp .env.Example .env
+npm run dev
+```
+
+La API corre en `http://localhost:3001` (Swagger en `/swagger`).
+
+### Integrantes
+
+| Nombre          | Apellido           | DNI        |
+| --------------- | ------------------ | ---------- |
+| Rafael Alberto  | Barberi Salcedo    | 95.151.120 |
+| Malena Celeste  | Fernandez Mansilla | 34.101.003 |
+| Carla Andrea    | Perez              | 34.259.069 |
+| Micaela Natalia | Signorello         | 38.624.940 |
